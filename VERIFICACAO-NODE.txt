@@ -1,0 +1,43 @@
+========================================
+  VERIFICAÇÃO DO NODE.JS
+========================================
+
+✓ Node.js v24.9.0 - INSTALADO E COMPATÍVEL
+✓ npm 11.6.0 - INSTALADO E FUNCIONANDO
+✓ Next.js 15 - COMPATÍVEL COM Node.js 24.9.0
+
+========================================
+  REQUISITOS DO PROJETO
+========================================
+
+Next.js 15 requer:
+- Node.js 18.17.0 ou superior
+- npm 9.0.0 ou superior
+
+SEU SISTEMA:
+- Node.js: v24.9.0 ✓ (Compatível)
+- npm: 11.6.0 ✓ (Compatível)
+
+========================================
+  OBSERVAÇÃO
+========================================
+
+A política de execução do PowerShell está em "Restricted",
+mas isso NÃO impede o funcionamento do projeto.
+
+Use os scripts .bat ou execute comandos via CMD:
+- iniciar-servidor.bat
+- cmd /c "npm run dev"
+
+========================================
+  TESTE RÁPIDO
+========================================
+
+Para verificar se tudo está funcionando:
+
+1. Execute: cmd /c "npm run dev"
+2. Aguarde: "Ready in X.Xs"
+3. Acesse: http://localhost:3000
+
+========================================
+

@@ -1,0 +1,68 @@
+========================================
+  COMO EXECUTAR O SERVIDOR
+========================================
+
+O erro "localhost recusou estabelecer ligação" acontece porque
+o servidor Next.js precisa estar RODANDO para você acessar o site.
+
+========================================
+  OPÇÃO 1: Usar o Script Batch (MAIS FÁCIL)
+========================================
+
+1. Clique duas vezes no arquivo: iniciar-servidor.bat
+2. Aguarde aparecer a mensagem "Ready"
+3. Abra o navegador e acesse: http://localhost:3000
+4. MANTENHA a janela do servidor aberta!
+
+========================================
+  OPÇÃO 2: Usar PowerShell
+========================================
+
+1. Clique com botão direito em "iniciar-servidor.ps1"
+2. Selecione "Executar com PowerShell"
+3. Aguarde aparecer a mensagem "Ready"
+4. Abra o navegador e acesse: http://localhost:3000
+5. MANTENHA a janela do servidor aberta!
+
+========================================
+  OPÇÃO 3: Manualmente no Terminal
+========================================
+
+1. Abra PowerShell ou CMD na pasta do projeto
+2. Digite: npm run dev
+3. Aguarde aparecer:
+   ▲ Next.js 15.5.9
+   - Local:        http://localhost:3000
+   ✓ Ready in X.Xs
+4. Abra o navegador e acesse: http://localhost:3000
+5. MANTENHA o terminal aberto!
+
+========================================
+  IMPORTANTE
+========================================
+
+- O servidor PRECISA estar rodando para acessar o site
+- NÃO feche a janela do terminal enquanto usar o site
+- Para parar o servidor, pressione Ctrl+C no terminal
+- Se a porta 3000 estiver ocupada, o script tentará liberá-la
+
+========================================
+  RESOLVER PROBLEMAS
+========================================
+
+Se ainda não funcionar:
+
+1. Verifique se Node.js está instalado:
+   node --version
+
+2. Verifique se as dependências estão instaladas:
+   npm install
+
+3. Tente usar uma porta diferente:
+   npm run dev -- -p 3001
+   (depois acesse http://localhost:3001)
+
+4. Verifique se há algum firewall bloqueando
+
+========================================
+
