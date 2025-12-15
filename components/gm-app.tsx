@@ -1,21 +1,40 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2, CheckCircle2, LogOut, ExternalLink } from "lucide-react"
-import { useWallet } from "@/hooks/use-wallet"
+import { Loader2, CheckCircle2, LogOut, ExternalLink, Wallet, Copy, ChevronDown } from "lucide-react"
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
+import { arcTestnet } from "@/lib/wagmi-config"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type TransactionState = "idle" | "pending" | "success" | "error"
 
 export function GMApp() {
-  const { address, isConnected, connect, disconnect } = useWallet()
+  const { address, isConnected } = useAccount()
+  const { connect, connectors, isPending: isConnecting } = useConnect()
+  const { disconnect } = useDisconnect()
+  const { switchChain } = useSwitchChain()
   const [txState, setTxState] = useState<TransactionState>("idle")
   const [txHash, setTxHash] = useState<string>("")
   const [showConfetti, setShowConfetti] = useState(false)
 
+  const handleConnect = async () => {
+    const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+    if (connector) {
+      connect({ connector })
+    }
+  }
+
   const handleSendGM = async () => {
     if (!isConnected) {
-      await connect()
+      await handleConnect()
       return
     }
 
@@ -57,6 +76,24 @@ export function GMApp() {
     setShowConfetti(false)
   }
 
+  // Auto-switch para Arc Testnet quando conectar
+  useEffect(() => {
+    if (isConnected && typeof window !== "undefined" && window.ethereum) {
+      window.ethereum.request({ method: "eth_chainId" }).then((chainId: unknown) => {
+        const chainIdStr = chainId as string
+        if (chainIdStr && parseInt(chainIdStr, 16) !== arcTestnet.id) {
+          try {
+            switchChain({ chainId: arcTestnet.id })
+          } catch {
+            // Silently fail if user rejects
+          }
+        }
+      }).catch(() => {
+        // Silently fail
+      })
+    }
+  }, [isConnected, switchChain])
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f2847] to-[#1a4d5c] -z-10" />
@@ -94,19 +131,85 @@ export function GMApp() {
         <div className="text-2xl font-bold text-white">Arc</div>
       </header>
 
-      {isConnected && (
+      {isConnected ? (
         <div className="absolute top-8 right-8 flex items-center gap-3">
-          <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 font-mono text-sm text-white">
-            {formatAddress(address)}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all gap-2 px-4 py-2"
+              >
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="font-mono text-sm">
+                  {formatAddress(address || "")}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="w-56 bg-card/95 backdrop-blur-md border border-white/20"
+            >
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Carteira Conectada</p>
+                  <p className="text-xs leading-none text-muted-foreground font-mono">
+                    {formatAddress(address || "")}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  if (address) {
+                    navigator.clipboard.writeText(address)
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                <span>Copiar Endereço</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  if (address) {
+                    window.open(`https://testnet.arcscan.app/address/${address}`, "_blank")
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                <span>Ver no Explorer</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleDisconnect}
+                className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Desconectar</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : (
+        <div className="absolute top-8 right-8">
           <Button
-            onClick={handleDisconnect}
-            variant="ghost"
-            size="icon"
-            className="rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-red-500/20 hover:text-red-300 hover:border-red-400/40 transition-all"
-            title="Disconnect wallet"
+            onClick={handleConnect}
+            disabled={isConnecting}
+            className="rounded-full bg-white hover:bg-white/90 text-[#0a1628] font-semibold gap-2 px-6 py-2.5 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <LogOut className="h-4 w-4" />
+            {isConnecting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <Wallet className="h-4 w-4" />
+                Connect Wallet
+              </>
+            )}
           </Button>
         </div>
       )}
@@ -192,33 +295,61 @@ export function GMApp() {
         </div>
       </div>
 
-      <footer className="absolute bottom-8 left-0 right-0 flex justify-center gap-4">
-        <Button
-          onClick={() => window.open("https://www.arc.network/", "_blank")}
-          variant="ghost"
-          className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-            />
-          </svg>
-          Arc Network
-        </Button>
+      <footer className="absolute bottom-8 left-0 right-0 flex justify-between items-center px-8 gap-4">
+        {/* Lado Esquerdo - Blockchain da Arc e Site */}
+        <div className="flex flex-col items-center ml-8">
+          <div className="flex items-center gap-4 relative">
+            <p className="text-xs font-semibold text-white/70 mb-3 absolute -top-6 left-1/2 -translate-x-1/2 uppercase tracking-wider text-center w-full">ARC TESTNET</p>
+            <Button
+              onClick={() => window.open("https://testnet.arcscan.app", "_blank")}
+              variant="ghost"
+              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              Blockchain da Arc
+            </Button>
 
-        <Button
-          onClick={() => window.open("https://x.com/arc", "_blank")}
-          variant="ghost"
-          className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-        >
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-          Follow on X
-        </Button>
+            <Button
+              onClick={() => window.open("https://www.arc.network/", "_blank")}
+              variant="ghost"
+              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                />
+              </svg>
+              Site
+            </Button>
+          </div>
+        </div>
+
+        {/* Lado Direito - X do Usuário */}
+        <div className="flex flex-col items-center mr-8">
+          <p className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider text-center">SOCIAL DEV</p>
+          <div className="flex items-center">
+            <Button
+              onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}
+              variant="ghost"
+              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              title="X (Twitter)"
+            >
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </Button>
+          </div>
+        </div>
       </footer>
     </div>
   )

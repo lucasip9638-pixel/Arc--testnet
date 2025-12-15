@@ -4,32 +4,32 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated to Arc.network inspired dark theme with deep blue/teal palette */
-  --background: oklch(0.14 0.02 240);
+  /* Arc Network inspired dark theme - matching official site colors */
+  --background: oklch(0.08 0.02 240);
   --foreground: oklch(0.98 0.005 240);
-  --card: oklch(0.18 0.02 240);
+  --card: oklch(0.12 0.02 240);
   --card-foreground: oklch(0.98 0.005 240);
-  --popover: oklch(0.18 0.02 240);
+  --popover: oklch(0.12 0.02 240);
   --popover-foreground: oklch(0.98 0.005 240);
-  --primary: oklch(0.75 0.1 210);
-  --primary-foreground: oklch(0.14 0.02 240);
-  --secondary: oklch(0.25 0.02 240);
+  --primary: oklch(0.70 0.12 210);
+  --primary-foreground: oklch(0.08 0.02 240);
+  --secondary: oklch(0.20 0.02 240);
   --secondary-foreground: oklch(0.98 0.005 240);
-  --muted: oklch(0.25 0.02 240);
-  --muted-foreground: oklch(0.65 0.01 240);
+  --muted: oklch(0.20 0.02 240);
+  --muted-foreground: oklch(0.60 0.01 240);
   --accent: oklch(0.65 0.15 195);
   --accent-foreground: oklch(0.98 0.005 240);
   --destructive: oklch(0.55 0.25 27);
   --destructive-foreground: oklch(0.98 0.005 240);
-  --border: oklch(0.28 0.02 240);
-  --input: oklch(0.28 0.02 240);
+  --border: oklch(0.22 0.02 240);
+  --input: oklch(0.22 0.02 240);
   --ring: oklch(0.65 0.15 195);
   --chart-1: oklch(0.65 0.15 195);
   --chart-2: oklch(0.55 0.18 240);
   --chart-3: oklch(0.6 0.15 260);
   --chart-4: oklch(0.7 0.15 180);
   --chart-5: oklch(0.5 0.2 220);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -42,24 +42,24 @@
 
 .dark {
   /* Dark mode uses same Arc colors for consistency */
-  --background: oklch(0.14 0.02 240);
+  --background: oklch(0.08 0.02 240);
   --foreground: oklch(0.98 0.005 240);
-  --card: oklch(0.18 0.02 240);
+  --card: oklch(0.12 0.02 240);
   --card-foreground: oklch(0.98 0.005 240);
-  --popover: oklch(0.18 0.02 240);
+  --popover: oklch(0.12 0.02 240);
   --popover-foreground: oklch(0.98 0.005 240);
-  --primary: oklch(0.75 0.1 210);
-  --primary-foreground: oklch(0.14 0.02 240);
-  --secondary: oklch(0.25 0.02 240);
+  --primary: oklch(0.70 0.12 210);
+  --primary-foreground: oklch(0.08 0.02 240);
+  --secondary: oklch(0.20 0.02 240);
   --secondary-foreground: oklch(0.98 0.005 240);
-  --muted: oklch(0.25 0.02 240);
-  --muted-foreground: oklch(0.65 0.01 240);
+  --muted: oklch(0.20 0.02 240);
+  --muted-foreground: oklch(0.60 0.01 240);
   --accent: oklch(0.65 0.15 195);
   --accent-foreground: oklch(0.98 0.005 240);
   --destructive: oklch(0.55 0.25 27);
   --destructive-foreground: oklch(0.98 0.005 240);
-  --border: oklch(0.28 0.02 240);
-  --input: oklch(0.28 0.02 240);
+  --border: oklch(0.22 0.02 240);
+  --input: oklch(0.22 0.02 240);
   --ring: oklch(0.65 0.15 195);
   --chart-1: oklch(0.65 0.15 195);
   --chart-2: oklch(0.55 0.18 240);
@@ -157,4 +157,132 @@
   top: -10%;
   text-shadow: 0 0 10px currentColor;
   pointer-events: none;
+}
+
+/* Arc Network background animations - Solana style */
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(20px, 30px) scale(1.05);
+  }
+}
+
+@keyframes meshMove {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(50px, -50px) scale(1.1);
+  }
+  100% {
+    transform: translate(-30px, 30px) scale(0.95);
+  }
+}
+
+@keyframes gridMove {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 60px 60px, 60px 60px;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pathMove {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 1000;
+  }
+}
+
+/* Arc Network decorative element animations */
+@keyframes arcFlow1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-30px, -20px) scale(1.05);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(20px, 30px) scale(0.95);
+    opacity: 0.25;
+  }
+}
+
+@keyframes arcFlow2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate(20px, -30px) scale(1.08);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(-25px, 25px) scale(0.92);
+    opacity: 0.2;
+  }
+}
+
+@keyframes arcFlow3 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(30px, -25px) scale(0.9);
+    opacity: 0.15;
+  }
+}
+
+@keyframes arcPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.6;
+  }
+}
+
+@keyframes arcLineMove {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    stroke-dashoffset: 2000;
+    opacity: 0.2;
+  }
 }

@@ -1,6 +1,7 @@
 import { defineChain } from "viem"
 import { createConfig, http } from "wagmi"
 import { injected, metaMask, coinbaseWallet } from "wagmi/connectors"
+import { createPublicClient } from "viem"
 
 /**
  * Wagmi configuration for Arc Testnet
@@ -12,6 +13,7 @@ import { injected, metaMask, coinbaseWallet } from "wagmi/connectors"
  */
 
 // Define Arc Testnet chain using viem
+// IMPORTANT: Arc Testnet uses USDC as native currency (not ETH)
 export const arcTestnet = defineChain({
   id: 5042002,
   name: "Arc Testnet",
@@ -24,6 +26,9 @@ export const arcTestnet = defineChain({
     default: {
       http: ["https://rpc.testnet.arc.network"],
     },
+    public: {
+      http: ["https://rpc.testnet.arc.network"],
+    },
   },
   blockExplorers: {
     default: {
@@ -34,7 +39,7 @@ export const arcTestnet = defineChain({
   testnet: true,
 })
 
-// Create wagmi config
+// Create wagmi config with optimized polling
 export const wagmiConfig = createConfig({
   chains: [arcTestnet],
   connectors: [

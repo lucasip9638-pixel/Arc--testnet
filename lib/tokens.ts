@@ -54,13 +54,36 @@ export function formatTokenAmount(amount: bigint, decimals: number): string {
 
 /**
  * Parse token amount from string input
+ * Ensures valid BigInt output for blockchain transactions
  */
 export function parseTokenAmount(amount: string, decimals: number): bigint {
-  if (!amount || amount === "") return 0n
-  const [whole, fraction = ""] = amount.split(".")
-  const wholePart = BigInt(whole || "0")
+  if (!amount || amount === "" || amount.trim() === "") return 0n
+  
+  // Remove any whitespace
+  const cleanAmount = amount.trim()
+  
+  // Validate format (numbers and decimal point only)
+  if (!/^\d+\.?\d*$/.test(cleanAmount)) {
+    return 0n
+  }
+  
+  const [whole, fraction = ""] = cleanAmount.split(".")
+  
+  // Validate whole part
+  if (!whole || whole === "") {
+    return 0n
+  }
+  
+  const wholePart = BigInt(whole)
   const fractionPart = BigInt((fraction.padEnd(decimals, "0").slice(0, decimals) || "0"))
   const divisor = BigInt(10 ** decimals)
-  return wholePart * divisor + fractionPart
+  const result = wholePart * divisor + fractionPart
+  
+  // Ensure result is positive and valid
+  if (result <= 0n) {
+    return 0n
+  }
+  
+  return result
 }
 

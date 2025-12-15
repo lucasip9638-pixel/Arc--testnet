@@ -72,9 +72,14 @@ export function DailyGM({ account }: DailyGMProps) {
   // Write contract (send GM)
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract()
 
-  // Wait for transaction
+  // Wait for transaction with faster polling
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
+    pollingInterval: 1000, // Poll every 1 second for faster confirmation
+    query: {
+      enabled: !!hash,
+      retry: true,
+    },
   })
 
   // Stats from contract
@@ -202,17 +207,114 @@ export function DailyGM({ account }: DailyGMProps) {
       return
     }
 
-    // Verificar se está na rede correta (Arc Testnet - Chain ID: 5042002)
-    if (chainId !== arcTestnet.id) {
-      setErrorMessage("Please switch to Arc Testnet first. Click 'Switch Network' button above.")
-      return
-    }
-
     setErrorMessage(null)
     setGmSuccess(false)
 
+    // Verificar primeiro diretamente no MetaMask qual é a rede atual
+    let currentChainIdFromWallet = chainId
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        const walletChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
+        currentChainIdFromWallet = parseInt(walletChainId, 16)
+      } catch (error) {
+        console.error("Error getting chainId from wallet:", error)
+      }
+    }
+
+    // Verificar e trocar para Arc Testnet se necessário
+    if (currentChainIdFromWallet !== arcTestnet.id) {
+      setIsSwitchingChain(true)
+      try {
+        // Tentar fazer switch
+        await switchChain({ chainId: arcTestnet.id })
+        
+        // Aguardar e verificar se a rede realmente trocou
+        let attempts = 0
+        const maxAttempts = 10
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+          if (typeof window !== "undefined" && window.ethereum) {
+            const currentChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
+            const currentChainIdNumber = parseInt(currentChainId, 16)
+            if (currentChainIdNumber === arcTestnet.id) {
+              break
+            }
+          }
+          attempts++
+        }
+        
+        // Verificar novamente o chainId do wagmi
+        if (chainId !== arcTestnet.id && attempts >= maxAttempts) {
+          setErrorMessage("Falha ao trocar para Arc Testnet. Por favor, troque manualmente no MetaMask.")
+          setIsSwitchingChain(false)
+          return
+        }
+      } catch (switchError: any) {
+        setIsSwitchingChain(false)
+        // Se a rede não existir, adicionar
+        if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError" || switchError?.message?.includes("not found")) {
+          if (typeof window !== "undefined" && window.ethereum) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: `0x${arcTestnet.id.toString(16)}`,
+                  chainName: "Arc Testnet",
+                  nativeCurrency: {
+                    name: "USDC",
+                    symbol: "USDC",
+                    decimals: 6,
+                  },
+                  rpcUrls: ["https://rpc.testnet.arc.network"],
+                  blockExplorerUrls: ["https://testnet.arcscan.app"],
+                }],
+              })
+              // Aguardar e verificar se a rede trocou
+              await new Promise(resolve => setTimeout(resolve, 1500))
+              let attempts = 0
+              const maxAttempts = 10
+              while (attempts < maxAttempts) {
+                if (typeof window !== "undefined" && window.ethereum) {
+                  const currentChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
+                  const currentChainIdNumber = parseInt(currentChainId, 16)
+                  if (currentChainIdNumber === arcTestnet.id) {
+                    break
+                  }
+                }
+                await new Promise(resolve => setTimeout(resolve, 500))
+                attempts++
+              }
+            } catch (addError) {
+              setErrorMessage("Falha ao adicionar Arc Testnet. Por favor, adicione manualmente no MetaMask.")
+              setIsSwitchingChain(false)
+              return
+            }
+          }
+        } else if (switchError?.code === 4001) {
+          setErrorMessage("Troca de rede cancelada pelo usuário.")
+          setIsSwitchingChain(false)
+          return
+        } else {
+          setErrorMessage("Por favor, troque para Arc Testnet para pagar gas em USDC.")
+          setIsSwitchingChain(false)
+          return
+        }
+      }
+      setIsSwitchingChain(false)
+      
+      // Verificar novamente após a troca
+      if (typeof window !== "undefined" && window.ethereum) {
+        const finalChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
+        const finalChainIdNumber = parseInt(finalChainId, 16)
+        if (finalChainIdNumber !== arcTestnet.id) {
+          setErrorMessage("Falha ao trocar para Arc Testnet. Por favor, troque manualmente no MetaMask.")
+          return
+        }
+      }
+    }
+
     try {
-      // Não passar chainId explicitamente - deixar wagmi usar a rede atual
+      // Não passar chainId - deixar wagmi usar a rede atual (que já verificamos ser Arc Testnet)
       writeContract({
         address: DAILY_GM_CONTRACT_ADDRESS,
         abi: DAILY_GM_ABI,
@@ -220,10 +322,12 @@ export function DailyGM({ account }: DailyGMProps) {
       })
     } catch (error: any) {
       console.error("GM failed:", error)
-      if (error?.message?.includes("chain")) {
-        setErrorMessage("Wrong network. Please switch to Arc Testnet.")
+      if (error?.message?.includes("chain") || error?.message?.includes("network") || error?.message?.includes("cadeia")) {
+        setErrorMessage("Rede incorreta. Por favor, troque para Arc Testnet e tente novamente.")
+      } else if (error?.message?.includes("User rejected") || error?.message?.includes("user rejected") || error?.message?.includes("rejected")) {
+        setErrorMessage("Transação cancelada pelo usuário")
       } else {
-        setErrorMessage("Failed to send GM transaction")
+        setErrorMessage(`Falha ao enviar GM: ${error?.message || "Erro desconhecido"}`)
       }
     }
   }
@@ -246,10 +350,10 @@ export function DailyGM({ account }: DailyGMProps) {
     setGmSuccess(false)
   }
 
-  const isSending = isPending || isConfirming
+  const isSending = isPending || isConfirming || isSwitchingChain
 
   return (
-    <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
+    <Card className="p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
       <h2 className="text-2xl font-bold text-foreground mb-6">Daily GM</h2>
 
       {/* Contract not deployed warning */}

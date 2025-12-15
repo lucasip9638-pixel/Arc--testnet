@@ -1,103 +1,179 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LogOut, Wallet, AlertCircle, RefreshCw, Network, X } from "lucide-react"
-import { useWallet } from "@/hooks/use-wallet"
-import { useAccount, useChainId, useSwitchChain } from "wagmi"
+import { LogOut, Wallet, AlertCircle, RefreshCw, Network, X, Loader2, Copy, ExternalLink, ChevronDown, Info } from "lucide-react"
+import { useAccount, useChainId, useSwitchChain, useConnect, useDisconnect } from "wagmi"
 import { arcTestnet } from "@/lib/wagmi-config"
 import { TokenSwapReal } from "./token-swap-real"
 import { DailyGM } from "./daily-gm"
+import { SendToken } from "./send-token"
 import { NetworkSelector } from "./network-selector"
+import { NetworkSwitcher } from "./network-switcher"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export function DeFiApp() {
-  const { address, isConnected, connect, disconnect } = useWallet()
-  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
+  const { address, isConnected } = useAccount()
   const chainId = useChainId()
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
+  const { connect, connectors, isPending: isConnecting } = useConnect()
+  const { disconnect } = useDisconnect()
   const [activeTab, setActiveTab] = useState("gm")
   const [showNetworkSelector, setShowNetworkSelector] = useState(false)
+  const [showNetworkInfo, setShowNetworkInfo] = useState(false)
 
   const formatAddress = (addr: string) => {
+    if (!addr) return ""
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
-  const handleDisconnect = () => {
-    disconnect()
+  const handleConnect = async () => {
+    // Encontrar o primeiro conector disponível (geralmente MetaMask ou Injected)
+    const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+    
+    if (!connector) {
+      alert("Nenhuma carteira encontrada. Por favor, instale MetaMask ou outra carteira Web3.")
+      return
+    }
+
+    try {
+      // Conectar usando wagmi
+      connect({ connector })
+      
+      // Se não estiver na rede correta, aguardar um pouco e trocar
+      if (chainId !== 0 && chainId !== arcTestnet.id) {
+        setTimeout(async () => {
+          try {
+            await switchChain({ chainId: arcTestnet.id })
+          } catch (error: any) {
+            // Se a rede não existir, adicionar
+            if (error?.code === 4902 || error?.name === "ChainNotFoundError") {
+              if (typeof window !== "undefined" && window.ethereum) {
+                await window.ethereum.request({
+                  method: "wallet_addEthereumChain",
+                  params: [{
+                    chainId: `0x${arcTestnet.id.toString(16)}`,
+                    chainName: "Arc Testnet",
+                    nativeCurrency: {
+                      name: "USDC",
+                      symbol: "USDC",
+                      decimals: 6,
+                    },
+                    rpcUrls: ["https://rpc.testnet.arc.network"],
+                    blockExplorerUrls: ["https://testnet.arcscan.app"],
+                  }],
+                })
+              }
+            }
+          }
+        }, 500)
+      }
+    } catch (error) {
+      console.error("Error connecting wallet:", error)
+    }
   }
 
   const handleSwitchToArcTestnet = async () => {
     try {
-      // Tentar fazer switch usando wagmi
-      try {
-        await switchChain({ chainId: arcTestnet.id })
-      } catch (switchError: any) {
-        // Se falhar, tentar adicionar a rede diretamente
-        if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError") {
-          if (typeof window !== "undefined" && window.ethereum) {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: `0x${arcTestnet.id.toString(16)}`,
-                chainName: "Arc Testnet",
-                nativeCurrency: {
-                  name: "USDC",
-                  symbol: "USDC",
-                  decimals: 6,
-                },
-                rpcUrls: ["https://rpc.testnet.arc.network"],
-                blockExplorerUrls: ["https://testnet.arcscan.app"],
-              }],
-            })
-            // Aguardar um pouco e tentar switch novamente
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            await switchChain({ chainId: arcTestnet.id })
-          }
-        } else {
-          throw switchError
+      await switchChain({ chainId: arcTestnet.id })
+    } catch (switchError: any) {
+      // Se falhar, tentar adicionar a rede diretamente
+      if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError") {
+        if (typeof window !== "undefined" && window.ethereum) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: `0x${arcTestnet.id.toString(16)}`,
+              chainName: "Arc Testnet",
+              nativeCurrency: {
+                name: "USDC",
+                symbol: "USDC",
+                decimals: 6,
+              },
+              rpcUrls: ["https://rpc.testnet.arc.network"],
+              blockExplorerUrls: ["https://testnet.arcscan.app"],
+            }],
+          })
+          // Aguardar um pouco e tentar switch novamente
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          await switchChain({ chainId: arcTestnet.id })
         }
       }
-    } catch (error) {
-      console.error("Error switching network:", error)
-      alert("Failed to switch network. Please switch to Arc Testnet manually in your wallet.")
     }
   }
 
+  // Auto-switch para Arc Testnet quando conectar
+  useEffect(() => {
+    if (isConnected && chainId !== 0 && chainId !== arcTestnet.id) {
+      handleSwitchToArcTestnet()
+    }
+  }, [isConnected, chainId])
+
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#0f2847] to-[#1a4d5c] -z-10" />
-
-      {/* Decorative SVG */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] opacity-20 -z-10">
-        <svg viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M800 0C800 400 600 600 200 800" stroke="url(#gradient)" strokeWidth="2" />
+      {/* Additional decorative elements - Arc Network style */}
+      <div className="absolute top-0 right-0 w-[1000px] h-[1000px] opacity-[0.08] -z-10 pointer-events-none">
+        <svg viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="gradient" x1="800" y1="0" x2="200" y2="800">
-              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.5" />
+            <linearGradient id="arcGradient1" x1="1000" y1="0" x2="0" y2="1000">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
+            </linearGradient>
+            <linearGradient id="arcGradient2" x1="0" y1="0" x2="1000" y2="1000">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
             </linearGradient>
           </defs>
+          <path d="M1000 0C1000 500 750 750 250 1000" stroke="url(#arcGradient1)" strokeWidth="1.5" />
+          <path d="M0 0C0 300 200 500 500 700" stroke="url(#arcGradient2)" strokeWidth="1.5" />
         </svg>
       </div>
+      
+      {/* Subtle animated gradient orbs */}
+      <div className="absolute top-20 left-10 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/30 border-b border-white/10">
+      {/* Header - Arc Network style */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0a0e1a]/80 border-b border-white/5">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="text-2xl font-bold text-white">Arc DeFi</div>
-            <div className="hidden md:flex items-center gap-2 ml-4 px-3 py-1 rounded-full bg-accent/20 border border-accent/30">
-              <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              <span className="text-xs text-accent font-medium">Testnet</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="text-2xl font-bold text-white tracking-tight">Arc</div>
+              <div className="text-xl font-semibold text-white/60">DeFi</div>
             </div>
+            <button
+              onClick={() => setShowNetworkInfo(true)}
+              className="hidden md:flex items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-[#1e3a5f]/30 border border-[#3b82f6]/20 backdrop-blur-sm hover:bg-[#1e3a5f]/50 hover:border-[#3b82f6]/40 transition-all cursor-pointer"
+            >
+              <div className="h-2 w-2 rounded-full bg-[#06b6d4] animate-pulse" />
+              <span className="text-xs text-[#06b6d4] font-medium">Testnet</span>
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
-            {isConnected || wagmiConnected ? (
+            {isConnected ? (
               <>
+                {/* Network Switcher - Left side */}
+                <NetworkSwitcher />
+                
                 {/* Network Warning/Switch */}
-                {chainId !== arcTestnet.id && (
+                {chainId !== arcTestnet.id && chainId !== 0 && (
                   <Button
                     onClick={handleSwitchToArcTestnet}
                     disabled={isSwitchingChain}
@@ -111,54 +187,88 @@ export function DeFiApp() {
                   </Button>
                 )}
                 
-                <div className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 font-mono text-sm text-white">
-                  {formatAddress(address || wagmiAddress || "")}
-                </div>
+                {/* Connected Wallet Button with Dropdown - Similar to Arc Network */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                 <Button
-                  onClick={handleDisconnect}
                   variant="ghost"
-                  size="icon"
-                  className="rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-red-500/20 hover:text-red-300 hover:border-red-400/40 transition-all"
-                  title="Disconnect wallet"
+                  className="rounded-full bg-[#0f1729]/50 backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all gap-2 px-4 py-2"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <div className="h-2 w-2 rounded-full bg-[#06b6d4] animate-pulse" />
+                  <span className="font-mono text-sm">
+                    {formatAddress(address || "")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-60" />
                 </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-56 bg-card/95 backdrop-blur-md border border-white/20"
+                  >
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">Carteira Conectada</p>
+                        <p className="text-xs leading-none text-muted-foreground font-mono">
+                          {formatAddress(address || "")}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (address) {
+                          navigator.clipboard.writeText(address)
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Copy className="mr-2 h-4 w-4" />
+                      <span>Copiar Endereço</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (address) {
+                          window.open(`https://testnet.arcscan.app/address/${address}`, "_blank")
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      <span>Ver no Explorer</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => disconnect()}
+                      className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Desconectar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
+                {/* Network Switcher - Left side of Connect Wallet */}
+                <NetworkSwitcher />
+                
                 <Button
-                  onClick={() => {
-                    setShowNetworkSelector(true)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-white/20 text-white hover:bg-white/10 gap-2"
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="rounded-full bg-white hover:bg-white/95 text-[#0a0e1a] font-semibold gap-2 px-6 py-2.5 transition-all shadow-lg hover:shadow-xl hover:shadow-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Network className="h-4 w-4" />
-                  Selecionar Rede
-                </Button>
-                <Button
-                  onClick={async () => {
-                    // Se não estiver na Arc Testnet, mostrar seletor primeiro
-                    if (chainId !== 0 && chainId !== arcTestnet.id) {
-                      setShowNetworkSelector(true)
-                      return
-                    }
-                    // Conectar carteira
-                    await connect()
-                    // Verificar rede após conectar
-                    if (typeof window !== "undefined" && window.ethereum) {
-                      const currentChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
-                      if (currentChainId !== `0x${arcTestnet.id.toString(16)}`) {
-                        setShowNetworkSelector(true)
-                      }
-                    }
-                  }}
-                  className="rounded-full bg-white hover:bg-white/90 text-[#0a1628] font-semibold gap-2"
-                >
-                  <Wallet className="h-4 w-4" />
-                  Connect Wallet
-                </Button>
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-4 w-4" />
+                    Connect Wallet
+                  </>
+                )}
+              </Button>
               </>
             )}
           </div>
@@ -187,8 +297,8 @@ export function DeFiApp() {
                   onNetworkSelected={() => {
                     setShowNetworkSelector(false)
                     // Se não estiver conectado, conectar após selecionar rede
-                    if (!isConnected && !wagmiConnected) {
-                      setTimeout(() => connect(), 1000)
+                    if (!isConnected) {
+                      setTimeout(() => handleConnect(), 1000)
                     }
                   }}
                 />
@@ -196,99 +306,187 @@ export function DeFiApp() {
             </div>
           )}
 
-          {/* Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">Arc DeFi Hub</h1>
-            <p className="text-xl text-white/70 max-w-2xl mx-auto leading-relaxed">
-              Swap tokens and say GM daily on Arc Network
+          {/* Hero Section - Arc Network style */}
+          <div className="text-center mb-16">
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent">
+              Arc DeFi Hub
+            </h1>
+            <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto leading-relaxed font-light">
+              Send, exchange tokens, and tell GM daily
             </p>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs - Arc Network style */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/5 backdrop-blur-sm border border-white/10">
-              <TabsTrigger value="gm" className="data-[state=active]:bg-white/10">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#0f1729]/50 backdrop-blur-xl border border-white/5 rounded-xl p-1.5">
+              <TabsTrigger 
+                value="gm" 
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+              >
                 Daily GM
               </TabsTrigger>
-              <TabsTrigger value="swap" className="data-[state=active]:bg-white/10">
+              <TabsTrigger 
+                value="swap" 
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+              >
                 Swap
+              </TabsTrigger>
+              <TabsTrigger 
+                value="send" 
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+              >
+                Enviar Token
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="gm" className="space-y-6">
-              <DailyGM account={isConnected ? address : null} />
+              <DailyGM account={isConnected && address ? address : null} />
             </TabsContent>
 
             <TabsContent value="swap" className="space-y-6">
-              <TokenSwapReal account={isConnected ? address : null} />
+              <TokenSwapReal account={isConnected && address ? address : null} />
+            </TabsContent>
+
+            <TabsContent value="send" className="space-y-6">
+              <SendToken account={isConnected && address ? address : null} />
             </TabsContent>
           </Tabs>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-center">
-              <p className="text-sm text-white/60 mb-1">Network</p>
-              <p className="text-lg font-semibold text-white">Arc Testnet</p>
+          {/* Info Cards - Arc Network style */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16">
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-sm text-white/50 mb-2 font-medium">Network</p>
+              <p className="text-xl font-semibold text-white">Arc Testnet</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-center">
-              <p className="text-sm text-white/60 mb-1">Chain ID</p>
-              <p className="text-lg font-mono font-semibold text-white">5042002</p>
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-sm text-white/50 mb-2 font-medium">Chain ID</p>
+              <p className="text-xl font-mono font-semibold text-white">5042002</p>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 text-center">
-              <p className="text-sm text-white/60 mb-1">Gas Token</p>
-              <p className="text-lg font-semibold text-white">USDC</p>
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-sm text-white/50 mb-2 font-medium">Gas Token</p>
+              <p className="text-xl font-semibold text-white">USDC</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 mt-12">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-white/50">
-          <Button
-            onClick={() => window.open("https://www.arc.network/", "_blank")}
-            variant="ghost"
-            className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-              />
-            </svg>
-            Arc Network
-          </Button>
+      {/* Footer - Arc Network style */}
+      <footer className="container mx-auto px-4 py-12 mt-20 border-t border-white/5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/40">
+          {/* Lado Esquerdo - Blockchain da Arc e Site */}
+          <div className="flex flex-col items-center md:ml-8">
+            <div className="flex flex-col md:flex-row items-center gap-4 relative">
+              <p className="text-xs font-semibold text-white/70 mb-3 md:mb-0 md:absolute md:-top-6 md:left-1/2 md:-translate-x-1/2 uppercase tracking-wider text-center w-full md:w-auto">ARC TESTNET</p>
+              <Button
+                onClick={() => window.open("https://testnet.arcscan.app", "_blank")}
+                variant="ghost"
+                className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                Blockchain da Arc
+              </Button>
 
-          <Button
-            onClick={() => window.open("https://x.com/arc", "_blank")}
-            variant="ghost"
-            className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-            Follow on X
-          </Button>
+              <Button
+                onClick={() => window.open("https://www.arc.network/", "_blank")}
+                variant="ghost"
+                className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                  />
+                </svg>
+                Site
+              </Button>
+            </div>
+          </div>
 
-          <Button
-            onClick={() => window.open("https://testnet.arcscan.app", "_blank")}
-            variant="ghost"
-            className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            Block Explorer
-          </Button>
+          {/* Lado Direito - X do Usuário */}
+          <div className="flex flex-col items-center md:mr-8">
+            <p className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider text-center">SOCIAL DEV</p>
+            <div className="flex items-center">
+              <Button
+                onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}
+                variant="ghost"
+                className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                title="X (Twitter)"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </Button>
+            </div>
+          </div>
         </div>
       </footer>
+
+      {/* Network Info Dialog */}
+      <Dialog open={showNetworkInfo} onOpenChange={setShowNetworkInfo}>
+        <DialogContent className="bg-[#0f1729]/95 backdrop-blur-xl border border-white/10 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Info className="h-5 w-5 text-[#06b6d4]" />
+              Informações sobre Arc Testnet
+            </DialogTitle>
+            <DialogDescription className="text-white/70">
+              Requisitos para usar este dApp
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-yellow-300">Requisitos Importantes:</p>
+                  <ul className="text-sm text-yellow-200/80 space-y-2 list-disc list-inside">
+                    <li>Sua carteira precisa ter a rede <strong>Arc Testnet</strong> adicionada</li>
+                    <li>Você precisa ter tokens <strong>USDC</strong> na rede Arc Testnet para pagar as taxas de gas</li>
+                    <li>O gas é pago em USDC, não em ETH</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#1e3a5f]/30 border border-[#3b82f6]/20 rounded-lg p-4">
+              <p className="text-sm font-semibold text-white mb-2">Detalhes da Rede:</p>
+              <div className="space-y-1 text-xs text-white/70 font-mono">
+                <p>• Chain ID: 5042002</p>
+                <p>• RPC: https://rpc.testnet.arc.network</p>
+                <p>• Explorer: https://testnet.arcscan.app</p>
+                <p>• Moeda Nativa: USDC (6 decimais)</p>
+              </div>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+              <p className="text-sm font-semibold text-blue-300 mb-2">Como obter USDC na Arc Testnet:</p>
+              <p className="text-xs text-blue-200/80">
+                Use o{" "}
+                <a 
+                  href="https://faucet.circle.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-300 hover:text-blue-200 underline font-semibold"
+                >
+                  faucet oficial da Circle
+                </a>
+                {" "}para obter USDC de teste na Arc Testnet. 
+                Você precisará de USDC para pagar todas as transações neste dApp.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
