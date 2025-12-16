@@ -78,6 +78,7 @@ export function SendToken({ account }: SendTokenProps) {
       setErrorMessage(null)
       refetchBalance()
       
+      // Reset to idle after showing success message
       const timer = setTimeout(() => {
         setSendState("idle")
         setTxHash(null)
@@ -325,4 +326,5 @@ export function SendToken({ account }: SendTokenProps) {
     </Card>
   )
 }
+
 

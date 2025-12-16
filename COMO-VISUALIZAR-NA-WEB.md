@@ -105,3 +105,4 @@ git push
 - ✅ Servidor local disponível em `http://localhost:3000`
 - ⏳ Deploy no Vercel (fazer agora se quiser link público)
 
+

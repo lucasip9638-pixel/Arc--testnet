@@ -189,7 +189,7 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
 
   // Update state based on transaction - optimized for faster approval
   useEffect(() => {
-    if (hash) {
+    if (hash && !isConfirmed) {
       console.log("Transaction hash received:", hash)
       console.log("View transaction on ArcScan:", `https://testnet.arcscan.app/tx/${hash}`)
       setTxHash(hash)
@@ -208,13 +208,14 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
         console.log("Swap transaction sent! Hash:", hash)
       }
     }
-  }, [hash, swapState, refetchAllowance])
+  }, [hash, swapState, refetchAllowance, isConfirmed])
 
   // Separate effect for confirmed transactions
   useEffect(() => {
     if (isConfirmed && hash) {
       console.log("Transaction confirmed:", hash)
       console.log("View on ArcScan:", `https://testnet.arcscan.app/tx/${hash}`)
+      // Set success state first to show success message
       setSwapState("success")
       setFromAmount("")
       setErrorMessage(null)
@@ -223,7 +224,6 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
       refetchEURC()
       refetchAllowance()
       // Keep success message visible for 3 seconds, then reset to idle
-      // This allows user to see success message AND use input immediately
       const timer = setTimeout(() => {
         setSwapState("idle")
         setTxHash(null)
@@ -894,14 +894,13 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
 
   // Only consider swapping if we're actually in a pending/approving state AND transaction is still processing
   // When transaction is confirmed (isConfirmed), input should be enabled immediately
-  // When state is "success" or "idle", input should always be enabled
   const isSwapping = (swapState === "pending" || swapState === "approving") && !isConfirmed && (isPending || isConfirming)
   // Input should be enabled when:
-  // - Transaction is confirmed (isConfirmed) - this is the key fix, OR
-  // - State is success or idle, OR
+  // - Transaction is confirmed (isConfirmed), OR
+  // - State is idle or success, OR
   // - Not in pending/approving state
   // This ensures input works immediately after swap confirmation
-  const inputDisabled = !isConnected || ((swapState === "pending" || swapState === "approving") && !isConfirmed && (isPending || isConfirming))
+  const inputDisabled = !isConnected || isSwapping
   const canSwap = isConnected && fromAmount && Number.parseFloat(fromAmount) > 0 && !isSwapping && swapState !== "pending" && swapState !== "approving"
 
   return (
@@ -1099,11 +1098,6 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
           <span className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             {isSwitchingChain ? "Trocando rede..." : isConfirming ? "Confirmando..." : "Fazendo Swap..."}
-          </span>
-        ) : swapState === "success" ? (
-          <span className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4" />
-            Swap Concluído!
           </span>
         ) : (
           `Swap ${fromToken} → ${toToken}`
