@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "Arc DeFi Hub - Swap, Stake & GM on Arc Network",
   description: "Complete DeFi platform on Arc Network: swap USDC/EURC, stake for rewards, and say GM daily on-chain",
   generator: "v0.app",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+  },
   icons: {
     icon: [
       {

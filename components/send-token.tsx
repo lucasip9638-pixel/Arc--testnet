@@ -185,8 +185,8 @@ export function SendToken({ account }: SendTokenProps) {
   const canSend = isConnected && amount && recipientAddress && Number.parseFloat(amount) > 0 && !isSending
 
   return (
-    <Card className="p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
-      <h2 className="text-2xl font-bold text-foreground mb-6">Enviar Token</h2>
+    <Card className="p-4 sm:p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Enviar Token</h2>
 
       {/* Token Selection */}
       <div className="space-y-2 mb-4">
@@ -222,7 +222,7 @@ export function SendToken({ account }: SendTokenProps) {
           placeholder="0x..."
           value={recipientAddress}
           onChange={(e) => setRecipientAddress(e.target.value)}
-          className="bg-background/50 border-border/50 font-mono text-sm"
+          className="bg-background/50 border-border/50 font-mono text-xs sm:text-sm"
           disabled={!isConnected || isSending}
         />
       </div>
@@ -235,7 +235,7 @@ export function SendToken({ account }: SendTokenProps) {
           placeholder="0.0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="bg-background/50 border-border/50 text-lg"
+          className="bg-background/50 border-border/50 text-base sm:text-lg"
           disabled={!isConnected || isSending}
           step="any"
           min="0"
@@ -295,7 +295,7 @@ export function SendToken({ account }: SendTokenProps) {
       <Button
         onClick={handleSend}
         disabled={!canSend}
-        className="w-full h-12 text-base font-semibold"
+        className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold"
       >
         {!isConnected ? (
           "Conectar Carteira"

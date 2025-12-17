@@ -353,8 +353,8 @@ export function DailyGM({ account }: DailyGMProps) {
   const isSending = isPending || isConfirming || isSwitchingChain
 
   return (
-    <Card className="p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
-      <h2 className="text-2xl font-bold text-foreground mb-6">Daily GM</h2>
+    <Card className="p-4 sm:p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
+      <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Daily GM</h2>
 
       {/* Contract not deployed warning */}
       {DAILY_GM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
@@ -380,29 +380,29 @@ export function DailyGM({ account }: DailyGMProps) {
       )}
 
       {/* GM Stats Grid */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-background/30 rounded-lg p-3 text-center">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <div className="bg-background/30 rounded-lg p-2 sm:p-3 text-center">
           <p className="text-xs text-muted-foreground mb-1">Total GMs</p>
-          <p className="text-xl font-bold text-foreground">{stats.totalGMs}</p>
+          <p className="text-lg sm:text-xl font-bold text-foreground">{stats.totalGMs}</p>
         </div>
-        <div className="bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg p-3 text-center border border-accent/30">
+        <div className="bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg p-2 sm:p-3 text-center border border-accent/30">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Flame className="h-3 w-3 text-accent" />
             <p className="text-xs text-muted-foreground">Streak</p>
           </div>
-          <p className="text-xl font-bold text-accent">{stats.currentStreak}</p>
+          <p className="text-lg sm:text-xl font-bold text-accent">{stats.currentStreak}</p>
         </div>
-        <div className="bg-background/30 rounded-lg p-3 text-center">
+        <div className="bg-background/30 rounded-lg p-2 sm:p-3 text-center">
           <p className="text-xs text-muted-foreground mb-1">Longest</p>
-          <p className="text-xl font-bold text-foreground">{stats.longestStreak}</p>
+          <p className="text-lg sm:text-xl font-bold text-foreground">{stats.longestStreak}</p>
         </div>
       </div>
 
       {/* GM Button / Countdown */}
       {!canSayGM && !gmSuccess && timeUntilNext > 0 && (
-        <div className="bg-background/30 rounded-lg p-4 mb-6 text-center">
-          <p className="text-sm text-muted-foreground mb-2">Next GM available in</p>
-          <p className="text-2xl font-mono font-bold text-accent">{formatTime(timeUntilNext)}</p>
+        <div className="bg-background/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2">Next GM available in</p>
+          <p className="text-xl sm:text-2xl font-mono font-bold text-accent">{formatTime(timeUntilNext)}</p>
         </div>
       )}
 
@@ -415,8 +415,8 @@ export function DailyGM({ account }: DailyGMProps) {
           />
 
           {/* Centered floating modal */}
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md px-4 animate-in zoom-in-95 fade-in duration-300">
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-2xl p-8 border-2 border-accent/40 shadow-2xl backdrop-blur-xl relative">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md px-3 sm:px-4 animate-in zoom-in-95 fade-in duration-300">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border-2 border-accent/40 shadow-2xl backdrop-blur-xl relative max-h-[90vh] overflow-y-auto">
               {/* Close button */}
               <button
                 onClick={handleCloseModal}
@@ -426,10 +426,10 @@ export function DailyGM({ account }: DailyGMProps) {
               </button>
 
               {/* Success message */}
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4 animate-bounce">🌅</div>
-                <h3 className="text-3xl font-bold text-foreground mb-2">GM Sent!</h3>
-                <p className="text-muted-foreground mb-4">Your on-chain good morning is now live on Arc Testnet</p>
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="text-4xl sm:text-6xl mb-3 sm:mb-4 animate-bounce">🌅</div>
+                <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">GM Sent!</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 px-2">Your on-chain good morning is now live on Arc Testnet</p>
                 {hash && (
                   <p className="text-xs text-muted-foreground font-mono break-all">
                     {hash}
@@ -438,13 +438,13 @@ export function DailyGM({ account }: DailyGMProps) {
               </div>
 
               {/* Action buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <Button
                   onClick={handleShareOnX}
-                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 gap-3"
+                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 gap-2 sm:gap-3"
                   size="lg"
                 >
-                  <Share2 className="h-6 w-6" />
+                  <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
                   Share on X
                 </Button>
                 <Button
@@ -490,7 +490,7 @@ export function DailyGM({ account }: DailyGMProps) {
       <Button
         onClick={handleSayGM}
         disabled={!isConnected || !canSayGM || isSending || isSwitchingChain || DAILY_GM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" || (isConnected && chainId !== arcTestnet.id)}
-        className="w-full h-14 text-lg font-bold"
+        className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold"
         size="lg"
       >
         {!isConnected

@@ -904,9 +904,9 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
   const canSwap = isConnected && fromAmount && Number.parseFloat(fromAmount) > 0 && !isSwapping && swapState !== "pending" && swapState !== "approving"
 
   return (
-    <Card className="p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground">Swap USDC ⇄ EURC</h2>
+    <Card className="p-4 sm:p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">Swap USDC ⇄ EURC</h2>
         {SWAP_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
           <div className="text-xs text-muted-foreground bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded">
             Contract Not Deployed
@@ -941,12 +941,12 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
             placeholder="0.0"
             value={fromAmount}
             onChange={(e) => setFromAmount(e.target.value)}
-            className="flex-1 bg-background/50 border-border/50 text-lg"
+            className="flex-1 bg-background/50 border-border/50 text-base sm:text-lg"
             disabled={inputDisabled}
             step="any"
             min="0"
           />
-          <Button variant="secondary" className="min-w-24" disabled>
+          <Button variant="secondary" className="min-w-20 sm:min-w-24 text-xs sm:text-sm" disabled>
             {fromToken}
           </Button>
         </div>
@@ -979,9 +979,9 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
             placeholder="0.0"
             value={toAmount}
             readOnly
-            className="flex-1 bg-background/50 border-border/50 text-lg"
+            className="flex-1 bg-background/50 border-border/50 text-base sm:text-lg"
           />
-          <Button variant="secondary" className="min-w-24" disabled>
+          <Button variant="secondary" className="min-w-20 sm:min-w-24 text-xs sm:text-sm" disabled>
             {toToken}
           </Button>
         </div>
@@ -1070,7 +1070,7 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
           <Button
             onClick={handleApprove}
             disabled={swapState === "approving" || swapState === "pending" || isSwapping}
-            className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 border border-yellow-500/30"
+            className="w-full h-11 sm:h-12 text-sm sm:text-base bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 border border-yellow-500/30"
           >
             {swapState === "approving" ? (
               <span className="flex items-center gap-2">
@@ -1088,7 +1088,7 @@ export function TokenSwapReal({ account }: TokenSwapRealProps) {
       <Button
         onClick={handleSwap}
         disabled={!canSwap || needsApproval}
-        className="w-full h-12 text-base font-semibold"
+        className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold"
       >
         {!isConnected ? (
           "Conectar Carteira"

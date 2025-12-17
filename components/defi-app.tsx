@@ -112,22 +112,22 @@ export function DeFiApp() {
 
       {/* Header - Arc Network style */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0a0e1a]/80 border-b border-white/5">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="text-2xl font-bold text-white tracking-tight">Arc</div>
-              <div className="text-xl font-semibold text-white/60">DeFi</div>
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">Arc</div>
+              <div className="text-lg sm:text-xl font-semibold text-white/60">DeFi</div>
             </div>
             <button
               onClick={() => setShowNetworkInfo(true)}
-              className="hidden md:flex items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-[#1e3a5f]/30 border border-[#3b82f6]/20 backdrop-blur-sm hover:bg-[#1e3a5f]/50 hover:border-[#3b82f6]/40 transition-all cursor-pointer"
+              className="hidden sm:flex items-center gap-2 ml-2 sm:ml-4 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#1e3a5f]/30 border border-[#3b82f6]/20 backdrop-blur-sm hover:bg-[#1e3a5f]/50 hover:border-[#3b82f6]/40 transition-all cursor-pointer"
             >
               <div className="h-2 w-2 rounded-full bg-[#06b6d4] animate-pulse" />
               <span className="text-xs text-[#06b6d4] font-medium">Testnet</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isConnected ? (
               <>
                 {/* Network Switcher - Left side */}
@@ -140,11 +140,12 @@ export function DeFiApp() {
                     disabled={isSwitchingChain}
                     variant="outline"
                     size="sm"
-                    className="rounded-full bg-yellow-500/20 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/30 gap-2"
+                    className="rounded-full bg-yellow-500/20 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/30 gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
                     title="Switch to Arc Testnet to pay gas fees in USDC"
                   >
                     <AlertCircle className="h-3 w-3" />
-                    {isSwitchingChain ? "Switching..." : "Switch to Arc Testnet"}
+                    <span className="hidden sm:inline">{isSwitchingChain ? "Switching..." : "Switch to Arc Testnet"}</span>
+                    <span className="sm:hidden">{isSwitchingChain ? "..." : "Switch"}</span>
                   </Button>
                 )}
                 
@@ -153,13 +154,13 @@ export function DeFiApp() {
                   <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="rounded-full bg-[#0f1729]/50 backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all gap-2 px-4 py-2"
+                  className="rounded-full bg-[#0f1729]/50 backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2"
                 >
                   <div className="h-2 w-2 rounded-full bg-[#06b6d4] animate-pulse" />
-                  <span className="font-mono text-sm">
+                  <span className="font-mono text-xs sm:text-sm">
                     {formatAddress(address || "")}
                   </span>
-                  <ChevronDown className="h-4 w-4 opacity-60" />
+                  <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 opacity-60" />
                 </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
@@ -215,10 +216,11 @@ export function DeFiApp() {
                 
                 <Button
                   onClick={handleConnect}
-                  className="rounded-full bg-white hover:bg-white/95 text-[#0a0e1a] font-semibold gap-2 px-6 py-2.5 transition-all shadow-lg hover:shadow-xl hover:shadow-white/20"
+                  className="rounded-full bg-white hover:bg-white/95 text-[#0a0e1a] font-semibold gap-1 sm:gap-2 px-3 sm:px-6 py-1.5 sm:py-2.5 transition-all shadow-lg hover:shadow-xl hover:shadow-white/20 text-xs sm:text-sm"
                 >
-                  <Wallet className="h-4 w-4" />
-                  Connect Wallet
+                  <Wallet className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Connect Wallet</span>
+                  <span className="sm:hidden">Connect</span>
                 </Button>
               </>
             )}
@@ -227,12 +229,12 @@ export function DeFiApp() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 w-full">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 w-full">
         <div className="max-w-6xl mx-auto w-full">
           {/* Network Selector Modal */}
           {showNetworkSelector && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div className="bg-card rounded-2xl p-6 max-w-md w-full border border-border/50 shadow-2xl">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+              <div className="bg-card rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full border border-border/50 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold text-foreground">Selecionar Rede</h2>
                   <Button
@@ -258,35 +260,37 @@ export function DeFiApp() {
           )}
 
           {/* Hero Section - Arc Network style */}
-          <div className="text-center mb-16">
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 tracking-tight bg-gradient-to-r from-white via-white/90 to-white/70 bg-clip-text text-transparent px-2">
               Arc DeFi Hub
             </h1>
-            <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto leading-relaxed font-light">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/60 max-w-2xl mx-auto leading-relaxed font-light px-4">
               Send, exchange tokens, and tell GM daily
             </p>
           </div>
 
           {/* Tabs - Arc Network style */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#0f1729]/50 backdrop-blur-xl border border-white/5 rounded-xl p-1.5">
+            <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 bg-[#0f1729]/50 backdrop-blur-xl border border-white/5 rounded-xl p-1 sm:p-1.5">
               <TabsTrigger 
                 value="gm" 
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all text-xs sm:text-sm px-2 sm:px-4"
               >
-                Daily GM
+                <span className="hidden sm:inline">Daily GM</span>
+                <span className="sm:hidden">GM</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="swap" 
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all text-xs sm:text-sm px-2 sm:px-4"
               >
                 Swap
               </TabsTrigger>
               <TabsTrigger 
                 value="send" 
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all"
+                className="data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=inactive]:text-white/50 rounded-lg transition-all text-xs sm:text-sm px-2 sm:px-4"
               >
-                Enviar Token
+                <span className="hidden sm:inline">Enviar Token</span>
+                <span className="sm:hidden">Enviar</span>
               </TabsTrigger>
             </TabsList>
 
@@ -304,26 +308,26 @@ export function DeFiApp() {
           </Tabs>
 
           {/* Info Cards - Arc Network style */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16">
-            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
-              <p className="text-sm text-white/50 mb-2 font-medium">Network</p>
-              <p className="text-xl font-semibold text-white">Arc Testnet</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-8 sm:mt-12 md:mt-16">
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-4 sm:p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-xs sm:text-sm text-white/50 mb-2 font-medium">Network</p>
+              <p className="text-lg sm:text-xl font-semibold text-white">Arc Testnet</p>
             </div>
-            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
-              <p className="text-sm text-white/50 mb-2 font-medium">Chain ID</p>
-              <p className="text-xl font-mono font-semibold text-white">5042002</p>
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-4 sm:p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-xs sm:text-sm text-white/50 mb-2 font-medium">Chain ID</p>
+              <p className="text-lg sm:text-xl font-mono font-semibold text-white">5042002</p>
             </div>
-            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-6 text-center hover:border-white/10 transition-all">
-              <p className="text-sm text-white/50 mb-2 font-medium">Gas Token</p>
-              <p className="text-xl font-semibold text-white">USDC</p>
+            <div className="bg-[#0f1729]/40 backdrop-blur-xl border border-white/5 rounded-xl p-4 sm:p-6 text-center hover:border-white/10 transition-all">
+              <p className="text-xs sm:text-sm text-white/50 mb-2 font-medium">Gas Token</p>
+              <p className="text-lg sm:text-xl font-semibold text-white">USDC</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer - Arc Network style */}
-      <footer className="container mx-auto px-4 py-12 mt-20 border-t border-white/5">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/40">
+      <footer className="container mx-auto px-3 sm:px-4 py-8 sm:py-12 mt-12 sm:mt-16 md:mt-20 border-t border-white/5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 text-xs sm:text-sm text-white/40">
           {/* Lado Esquerdo - Blockchain da Arc e Site */}
           <div className="flex flex-col items-center md:ml-8">
             <div className="flex flex-col md:flex-row items-center gap-4 relative">
@@ -383,7 +387,7 @@ export function DeFiApp() {
 
       {/* Network Info Dialog */}
       <Dialog open={showNetworkInfo} onOpenChange={setShowNetworkInfo}>
-        <DialogContent className="bg-[#0f1729]/95 backdrop-blur-xl border border-white/10 text-white max-w-md">
+        <DialogContent className="bg-[#0f1729]/95 backdrop-blur-xl border border-white/10 text-white max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Info className="h-5 w-5 text-[#06b6d4]" />
