@@ -1,8 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { Providers } from "@/components/providers"
+import { AnalyticsWrapper } from "@/components/analytics-wrapper"
 import "./globals.css"
 
 const geist = Geist({ 
@@ -49,7 +49,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
-        <Analytics />
+        <AnalyticsWrapper />
       </body>
     </html>
   )

@@ -2,7 +2,7 @@ import { DeFiApp } from "@/components/defi-app"
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen relative overflow-hidden">
+    <main className="min-h-screen relative overflow-x-hidden w-full">
       {/* Arc Network inspired animated background - Solana style */}
       <div className="fixed inset-0 -z-10">
         {/* Base dark gradient */}
@@ -114,7 +114,7 @@ export default function HomePage() {
         </svg>
         
         {/* Arc Network decorative element - right side (lozano style) - Beautiful flowing design */}
-        <div className="absolute top-0 right-0 w-[65%] h-full opacity-25 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[50%] h-full opacity-15 pointer-events-none overflow-hidden">
           <svg 
             className="absolute right-0 top-1/2 -translate-y-1/2 w-full h-[140%]"
             viewBox="0 0 1400 1800" 

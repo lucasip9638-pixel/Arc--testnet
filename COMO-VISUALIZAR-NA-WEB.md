@@ -106,3 +106,4 @@ git push
 - ⏳ Deploy no Vercel (fazer agora se quiser link público)
 
 
+

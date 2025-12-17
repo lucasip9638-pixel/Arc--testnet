@@ -125,7 +125,7 @@ export function DeFiApp() {
   }, [isConnected, chainId])
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-x-hidden w-full">
       {/* Additional decorative elements - Arc Network style */}
       <div className="absolute top-0 right-0 w-[1000px] h-[1000px] opacity-[0.08] -z-10 pointer-events-none">
         <svg viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -276,8 +276,8 @@ export function DeFiApp() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="container mx-auto px-4 py-8 w-full">
+        <div className="max-w-6xl mx-auto w-full">
           {/* Network Selector Modal */}
           {showNetworkSelector && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
