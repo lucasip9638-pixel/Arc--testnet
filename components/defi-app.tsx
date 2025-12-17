@@ -37,6 +37,7 @@ export function DeFiApp() {
   const [activeTab, setActiveTab] = useState("gm")
   const [showNetworkSelector, setShowNetworkSelector] = useState(false)
   const [showNetworkInfo, setShowNetworkInfo] = useState(false)
+  const [isConnectingMobile, setIsConnectingMobile] = useState(false)
 
   const formatAddress = (addr: string) => {
     if (!addr) return ""
@@ -65,6 +66,8 @@ export function DeFiApp() {
       }
 
       // Não tem window.ethereum, usar MetaMask SDK para conectar no mobile
+      setIsConnectingMobile(true)
+      
       try {
         // Inicializar MetaMask SDK com configuração para mobile
         const MMSDK = new MetaMaskSDK({
@@ -86,7 +89,7 @@ export function DeFiApp() {
         await MMSDK.init()
         
         // Aguardar um pouco para o SDK inicializar completamente
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise(resolve => setTimeout(resolve, 1500))
         
         // Verificar se o provider foi injetado
         if (window.ethereum) {
@@ -100,8 +103,9 @@ export function DeFiApp() {
             if (accounts && accounts.length > 0) {
               // Conectar usando o connector do wagmi após obter as contas
               const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
-              if (connector) {
+              if (connector && connector.ready) {
                 await connect({ connector })
+                setIsConnectingMobile(false)
                 return
               }
             }
@@ -109,6 +113,7 @@ export function DeFiApp() {
             console.error('Request accounts error:', requestError)
             // Se o usuário rejeitar ou cancelar, não fazer nada
             if (requestError.code === 4001) {
+              setIsConnectingMobile(false)
               return
             }
             // Se der outro erro, tentar deep link
@@ -122,20 +127,16 @@ export function DeFiApp() {
         console.error('MetaMask SDK error:', error)
         
         // Fallback: usar deep link com formato que solicita conexão
-        // O formato correto inclui o método eth_requestAccounts na URL
         const currentUrl = window.location.href
         const encodedUrl = encodeURIComponent(currentUrl)
         
         // Deep link que solicita conexão explicitamente
-        // Este formato faz o MetaMask abrir e pedir confirmação
-        const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}?action=connect`
+        const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}`
         
         // Tentar abrir via deep link
-        // No mobile, isso vai abrir o MetaMask e mostrar a tela de conexão
         window.location.href = metamaskDeepLink
         
-        // Após redirecionar, quando voltar, verificar se conectou
-        // Isso será verificado quando a página recarregar
+        // O polling vai detectar quando voltar e conectar
       }
       
       return
@@ -186,9 +187,11 @@ export function DeFiApp() {
 
   // Verificar conexão quando voltar do MetaMask mobile
   useEffect(() => {
-    if (isMobile && typeof window !== 'undefined') {
-      // Quando a página ganha foco (usuário voltou do MetaMask)
-      const handleFocus = async () => {
+    if (isMobile && typeof window !== 'undefined' && (isConnectingMobile || !isConnected)) {
+      let checkInterval: NodeJS.Timeout | null = null
+      
+      // Função para verificar e conectar
+      const checkAndConnect = async () => {
         if (window.ethereum && !isConnected) {
           try {
             // Verificar se há contas conectadas
@@ -199,23 +202,123 @@ export function DeFiApp() {
             if (accounts && accounts.length > 0) {
               // Tentar conectar usando wagmi
               const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
-              if (connector) {
-                await connect({ connector })
+              if (connector && connector.ready) {
+                try {
+                  await connect({ connector })
+                  setIsConnectingMobile(false)
+                  // Se conectou com sucesso, parar o polling
+                  if (checkInterval) {
+                    clearInterval(checkInterval)
+                    checkInterval = null
+                  }
+                } catch (connectError) {
+                  console.error('Error connecting after accounts found:', connectError)
+                }
               }
             }
           } catch (error) {
-            console.error('Error checking connection after focus:', error)
+            console.error('Error checking connection:', error)
           }
+        }
+      }
+
+      // Quando a página ganha foco (usuário voltou do MetaMask)
+      const handleFocus = () => {
+        checkAndConnect()
+        
+        // Iniciar polling mais agressivo quando está tentando conectar
+        if (isConnectingMobile && !checkInterval) {
+          checkInterval = setInterval(() => {
+            if (!isConnected) {
+              checkAndConnect()
+            } else {
+              // Se já conectou, parar o polling
+              setIsConnectingMobile(false)
+              if (checkInterval) {
+                clearInterval(checkInterval)
+                checkInterval = null
+              }
+            }
+          }, 500) // Verificar a cada 500ms quando está conectando
+        }
+      }
+
+      // Listener para mudanças de contas do MetaMask (mais confiável)
+      const handleAccountsChanged = async (accounts: string[]) => {
+        console.log('Accounts changed:', accounts)
+        if (accounts && accounts.length > 0 && !isConnected) {
+          const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+          if (connector && connector.ready) {
+            try {
+              await connect({ connector })
+              setIsConnectingMobile(false)
+            } catch (error) {
+              console.error('Error connecting on accountsChanged:', error)
+            }
+          }
+        }
+      }
+
+      // Listener para quando o provider é injetado
+      const checkProvider = () => {
+        if (window.ethereum && !isConnected) {
+          checkAndConnect()
         }
       }
 
       window.addEventListener('focus', handleFocus)
       
+      // Adicionar listener para accountsChanged se window.ethereum existir
+      if (window.ethereum) {
+        window.ethereum.on('accountsChanged', handleAccountsChanged)
+        // Verificar imediatamente
+        checkProvider()
+      } else {
+        // Se não tem provider ainda, verificar periodicamente
+        const providerCheckInterval = setInterval(() => {
+          if (window.ethereum) {
+            window.ethereum.on('accountsChanged', handleAccountsChanged)
+            checkProvider()
+            clearInterval(providerCheckInterval)
+          }
+        }, 500)
+      }
+      
+      // Iniciar polling mais agressivo quando está tentando conectar
+      if (isConnectingMobile) {
+        checkInterval = setInterval(() => {
+          if (!isConnected) {
+            checkAndConnect()
+          } else {
+            setIsConnectingMobile(false)
+            if (checkInterval) {
+              clearInterval(checkInterval)
+              checkInterval = null
+            }
+          }
+        }, 500) // Verificar a cada 500ms
+        
+        // Timeout: parar após 30 segundos se não conectar
+        setTimeout(() => {
+          if (checkInterval) {
+            clearInterval(checkInterval)
+            checkInterval = null
+          }
+          setIsConnectingMobile(false)
+        }, 30000)
+      }
+      
       return () => {
         window.removeEventListener('focus', handleFocus)
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+        }
+        if (checkInterval) {
+          clearInterval(checkInterval)
+        }
       }
     }
-  }, [isMobile, isConnected, connectors, connect])
+  }, [isMobile, isConnected, isConnectingMobile, connectors, connect])
 
   return (
     <div className="min-h-screen relative overflow-x-hidden w-full">
