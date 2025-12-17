@@ -43,48 +43,9 @@ export function DeFiApp() {
   }
 
   const handleConnect = async () => {
-    // Encontrar o primeiro conector disponível (geralmente MetaMask ou Injected)
     const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
-    
-    if (!connector) {
-      alert("Nenhuma carteira encontrada. Por favor, instale MetaMask ou outra carteira Web3.")
-      return
-    }
-
-    try {
-      // Conectar usando wagmi
+    if (connector) {
       connect({ connector })
-      
-      // Se não estiver na rede correta, aguardar um pouco e trocar
-      if (chainId !== 0 && chainId !== arcTestnet.id) {
-        setTimeout(async () => {
-          try {
-            await switchChain({ chainId: arcTestnet.id })
-          } catch (error: any) {
-            // Se a rede não existir, adicionar
-            if (error?.code === 4902 || error?.name === "ChainNotFoundError") {
-              if (typeof window !== "undefined" && window.ethereum) {
-                await window.ethereum.request({
-                  method: "wallet_addEthereumChain",
-                  params: [{
-                    chainId: `0x${arcTestnet.id.toString(16)}`,
-                    chainName: "Arc Testnet",
-                    nativeCurrency: {
-                      name: "USDC",
-                      symbol: "USDC",
-                      decimals: 6,
-                    },
-                    rpcUrls: ["https://rpc.testnet.arc.network"],
-                    blockExplorerUrls: ["https://testnet.arcscan.app"],
-                  }],
-                })
-              }
-            }
-          }
-        }, 500)
-      }
-    } catch (error) {
-      console.error("Error connecting wallet:", error)
     }
   }
 
@@ -254,21 +215,11 @@ export function DeFiApp() {
                 
                 <Button
                   onClick={handleConnect}
-                  disabled={isConnecting}
-                  className="rounded-full bg-white hover:bg-white/95 text-[#0a0e1a] font-semibold gap-2 px-6 py-2.5 transition-all shadow-lg hover:shadow-xl hover:shadow-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-full bg-white hover:bg-white/95 text-[#0a0e1a] font-semibold gap-2 px-6 py-2.5 transition-all shadow-lg hover:shadow-xl hover:shadow-white/20"
                 >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="h-4 w-4" />
-                    Connect Wallet
-                  </>
-                )}
-              </Button>
+                  <Wallet className="h-4 w-4" />
+                  Connect Wallet
+                </Button>
               </>
             )}
           </div>
@@ -487,6 +438,7 @@ export function DeFiApp() {
           </div>
         </DialogContent>
       </Dialog>
+
     </div>
   )
 }

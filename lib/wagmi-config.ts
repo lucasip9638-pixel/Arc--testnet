@@ -1,7 +1,6 @@
 import { defineChain } from "viem"
 import { createConfig, http } from "wagmi"
 import { injected, metaMask, coinbaseWallet } from "wagmi/connectors"
-import { createPublicClient } from "viem"
 
 /**
  * Wagmi configuration for Arc Testnet
