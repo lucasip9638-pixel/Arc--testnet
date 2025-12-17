@@ -68,12 +68,15 @@ export function DeFiApp() {
       // Não tem window.ethereum, usar MetaMask SDK para conectar no mobile
       setIsConnectingMobile(true)
       
+      // URL do dApp no Vercel
+      const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+      
       try {
         // Inicializar MetaMask SDK com configuração para mobile
         const MMSDK = new MetaMaskSDK({
           dappMetadata: {
             name: "Arc DeFi Hub",
-            url: window.location.origin,
+            url: dappUrl, // Usar URL do dApp no Vercel
           },
           // Configuração para mobile - usar deep link
           useDeeplink: true,
@@ -106,6 +109,12 @@ export function DeFiApp() {
               if (connector && connector.ready) {
                 await connect({ connector })
                 setIsConnectingMobile(false)
+                
+                // Após conectar, abrir o dApp no navegador do MetaMask
+                // O MetaMask mobile tem um navegador interno que pode abrir URLs
+                const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+                window.location.href = metamaskBrowserLink
+                
                 return
               }
             }
@@ -126,14 +135,13 @@ export function DeFiApp() {
       } catch (error: any) {
         console.error('MetaMask SDK error:', error)
         
-        // Fallback: usar deep link com formato que solicita conexão
-        const currentUrl = window.location.href
-        const encodedUrl = encodeURIComponent(currentUrl)
+        // Fallback: usar deep link que abre o dApp no navegador do MetaMask
+        const encodedDappUrl = encodeURIComponent(dappUrl)
         
-        // Deep link que solicita conexão explicitamente
-        const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}`
+        // Deep link que abre o dApp no navegador interno do MetaMask
+        const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedDappUrl}`
         
-        // Tentar abrir via deep link
+        // Tentar abrir via deep link - isso vai abrir o MetaMask e depois o dApp no navegador interno
         window.location.href = metamaskDeepLink
         
         // O polling vai detectar quando voltar e conectar
@@ -185,6 +193,21 @@ export function DeFiApp() {
     }
   }, [isConnected, chainId])
 
+  // Redirecionar para o navegador do MetaMask após conectar no mobile
+  useEffect(() => {
+    if (isMobile && isConnected && address && isConnectingMobile) {
+      // Conectou com sucesso, abrir no navegador do MetaMask
+      const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+      const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+      
+      // Aguardar um pouco para garantir que tudo está pronto
+      setTimeout(() => {
+        window.location.href = metamaskBrowserLink
+        setIsConnectingMobile(false)
+      }, 1500)
+    }
+  }, [isMobile, isConnected, address, isConnectingMobile])
+
   // Verificar conexão quando voltar do MetaMask mobile
   useEffect(() => {
     if (isMobile && typeof window !== 'undefined' && (isConnectingMobile || !isConnected)) {
@@ -199,13 +222,29 @@ export function DeFiApp() {
               method: 'eth_accounts',
             })
             
+            // Verificar a rede atual
+            const currentChainId = await window.ethereum.request({
+              method: 'eth_chainId',
+            })
+            const currentChainIdNumber = parseInt(currentChainId as string, 16)
+            
             if (accounts && accounts.length > 0) {
-              // Tentar conectar usando wagmi
+              // Se tem contas, conectar independente da rede (a troca de rede pode vir depois)
               const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
               if (connector && connector.ready) {
                 try {
                   await connect({ connector })
                   setIsConnectingMobile(false)
+                  
+                  // Após conectar, abrir o dApp no navegador do MetaMask
+                  const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+                  const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+                  
+                  // Aguardar um pouco antes de redirecionar
+                  setTimeout(() => {
+                    window.location.href = metamaskBrowserLink
+                  }, 1000)
+                  
                   // Se conectou com sucesso, parar o polling
                   if (checkInterval) {
                     clearInterval(checkInterval)
@@ -223,7 +262,45 @@ export function DeFiApp() {
       }
 
       // Quando a página ganha foco (usuário voltou do MetaMask)
-      const handleFocus = () => {
+      const handleFocus = async () => {
+        // Verificar imediatamente quando volta
+        if (window.ethereum && !isConnected) {
+          try {
+            // Verificar contas e rede
+            const [accounts, currentChainId] = await Promise.all([
+              window.ethereum.request({ method: 'eth_accounts' }),
+              window.ethereum.request({ method: 'eth_chainId' })
+            ])
+            
+            const currentChainIdNumber = parseInt(currentChainId as string, 16)
+            
+            // Se tem contas (aprovou) e está na Arc Testnet (trocou rede), conectar
+            if (accounts && (accounts as string[]).length > 0) {
+              const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+              if (connector && connector.ready) {
+                try {
+                  await connect({ connector })
+                  setIsConnectingMobile(false)
+                  
+                  // Após conectar, abrir o dApp no navegador do MetaMask
+                  const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+                  const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+                  
+                  setTimeout(() => {
+                    window.location.href = metamaskBrowserLink
+                  }, 1000)
+                  
+                  return
+                } catch (error) {
+                  console.error('Error connecting on focus:', error)
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking on focus:', error)
+          }
+        }
+        
         checkAndConnect()
         
         // Iniciar polling mais agressivo quando está tentando conectar
@@ -252,9 +329,61 @@ export function DeFiApp() {
             try {
               await connect({ connector })
               setIsConnectingMobile(false)
+              
+              // Após conectar, abrir o dApp no navegador do MetaMask
+              const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+              const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+              
+              // Aguardar um pouco antes de redirecionar para garantir que a conexão foi estabelecida
+              setTimeout(() => {
+                window.location.href = metamaskBrowserLink
+              }, 1000)
             } catch (error) {
               console.error('Error connecting on accountsChanged:', error)
             }
+          }
+        }
+      }
+
+      // Listener para mudanças de rede (quando troca para Arc Testnet)
+      const handleChainChanged = async (newChainId: string) => {
+        console.log('Chain changed:', newChainId)
+        const newChainIdNumber = parseInt(newChainId, 16)
+        
+        // Se trocou para Arc Testnet e não está conectado, tentar conectar
+        if (newChainIdNumber === arcTestnet.id && !isConnected && window.ethereum) {
+          try {
+            // Aguardar um pouco para garantir que a mudança de rede foi processada
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            
+            // Verificar se há contas
+            const accounts = await window.ethereum.request({
+              method: 'eth_accounts',
+            })
+            
+            if (accounts && (accounts as string[]).length > 0) {
+              const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+              if (connector && connector.ready) {
+                try {
+                  await connect({ connector })
+                  setIsConnectingMobile(false)
+                  
+                  // Após conectar, abrir o dApp no navegador do MetaMask
+                  const dappUrl = 'https://arc-testnet-p1m7.vercel.app'
+                  const metamaskBrowserLink = `https://metamask.app.link/dapp/${encodeURIComponent(dappUrl)}`
+                  
+                  setTimeout(() => {
+                    window.location.href = metamaskBrowserLink
+                  }, 1000)
+                  
+                  console.log('Connected after chain change to Arc Testnet')
+                } catch (error) {
+                  console.error('Error connecting on chainChanged:', error)
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error checking accounts on chainChanged:', error)
           }
         }
       }
@@ -268,9 +397,10 @@ export function DeFiApp() {
 
       window.addEventListener('focus', handleFocus)
       
-      // Adicionar listener para accountsChanged se window.ethereum existir
+      // Adicionar listeners se window.ethereum existir
       if (window.ethereum) {
         window.ethereum.on('accountsChanged', handleAccountsChanged)
+        window.ethereum.on('chainChanged', handleChainChanged)
         // Verificar imediatamente
         checkProvider()
       } else {
@@ -278,6 +408,7 @@ export function DeFiApp() {
         const providerCheckInterval = setInterval(() => {
           if (window.ethereum) {
             window.ethereum.on('accountsChanged', handleAccountsChanged)
+            window.ethereum.on('chainChanged', handleChainChanged)
             checkProvider()
             clearInterval(providerCheckInterval)
           }
@@ -312,6 +443,7 @@ export function DeFiApp() {
         window.removeEventListener('focus', handleFocus)
         if (window.ethereum) {
           window.ethereum.removeListener('accountsChanged', handleAccountsChanged)
+          window.ethereum.removeListener('chainChanged', handleChainChanged)
         }
         if (checkInterval) {
           clearInterval(checkInterval)
