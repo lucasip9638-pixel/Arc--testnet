@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LogOut, Wallet, AlertCircle, RefreshCw, Network, X, Loader2, Copy, ExternalLink, ChevronDown, Info } from "lucide-react"
 import { useAccount, useChainId, useSwitchChain, useConnect, useDisconnect } from "wagmi"
 import { arcTestnet } from "@/lib/wagmi-config"
+import MetaMaskSDK from "@metamask/sdk"
 import { TokenSwapReal } from "./token-swap-real"
 import { DailyGM } from "./daily-gm"
 import { SendToken } from "./send-token"
@@ -58,22 +59,84 @@ export function DeFiApp() {
             return
           } catch (error) {
             console.error('Connection error:', error)
-            // Se falhar, continuar para tentar deep link
+            // Se falhar, continuar para tentar SDK
           }
         }
       }
 
-      // Não tem window.ethereum ou conexão falhou, usar deep link para abrir app da carteira
-      const currentUrl = window.location.href
-      const encodedUrl = encodeURIComponent(currentUrl)
-      
-      // MetaMask deep link - formato universal que funciona em iOS e Android
-      // Isso vai abrir o app MetaMask se instalado, ou redirecionar para a loja de apps
-      const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}`
-      
-      // Redirecionar para o deep link do MetaMask
-      // No mobile, isso vai abrir o app MetaMask automaticamente
-      window.location.href = metamaskDeepLink
+      // Não tem window.ethereum, usar MetaMask SDK para conectar no mobile
+      try {
+        // Inicializar MetaMask SDK com configuração para mobile
+        const MMSDK = new MetaMaskSDK({
+          dappMetadata: {
+            name: "Arc DeFi Hub",
+            url: window.location.origin,
+          },
+          // Configuração para mobile - usar deep link
+          useDeeplink: true,
+          // Injetar provider no window.ethereum para funcionar com wagmi
+          injectProvider: true,
+          // Configurações de comunicação
+          shouldShimWeb3: false,
+          // Modo de comunicação para mobile
+          communicationLayerPreference: 'webrtc',
+        })
+
+        // Inicializar o SDK
+        await MMSDK.init()
+        
+        // Aguardar um pouco para o SDK inicializar completamente
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Verificar se o provider foi injetado
+        if (window.ethereum) {
+          // Solicitar conexão - isso vai abrir o MetaMask e pedir confirmação
+          try {
+            const accounts = await window.ethereum.request({
+              method: 'eth_requestAccounts',
+              params: [],
+            })
+            
+            if (accounts && accounts.length > 0) {
+              // Conectar usando o connector do wagmi após obter as contas
+              const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+              if (connector) {
+                await connect({ connector })
+                return
+              }
+            }
+          } catch (requestError: any) {
+            console.error('Request accounts error:', requestError)
+            // Se o usuário rejeitar ou cancelar, não fazer nada
+            if (requestError.code === 4001) {
+              return
+            }
+            // Se der outro erro, tentar deep link
+            throw requestError
+          }
+        } else {
+          // Se o provider não foi injetado, usar deep link direto
+          throw new Error('Provider not injected')
+        }
+      } catch (error: any) {
+        console.error('MetaMask SDK error:', error)
+        
+        // Fallback: usar deep link com formato que solicita conexão
+        // O formato correto inclui o método eth_requestAccounts na URL
+        const currentUrl = window.location.href
+        const encodedUrl = encodeURIComponent(currentUrl)
+        
+        // Deep link que solicita conexão explicitamente
+        // Este formato faz o MetaMask abrir e pedir confirmação
+        const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}?action=connect`
+        
+        // Tentar abrir via deep link
+        // No mobile, isso vai abrir o MetaMask e mostrar a tela de conexão
+        window.location.href = metamaskDeepLink
+        
+        // Após redirecionar, quando voltar, verificar se conectou
+        // Isso será verificado quando a página recarregar
+      }
       
       return
     }
@@ -120,6 +183,39 @@ export function DeFiApp() {
       handleSwitchToArcTestnet()
     }
   }, [isConnected, chainId])
+
+  // Verificar conexão quando voltar do MetaMask mobile
+  useEffect(() => {
+    if (isMobile && typeof window !== 'undefined') {
+      // Quando a página ganha foco (usuário voltou do MetaMask)
+      const handleFocus = async () => {
+        if (window.ethereum && !isConnected) {
+          try {
+            // Verificar se há contas conectadas
+            const accounts = await window.ethereum.request({
+              method: 'eth_accounts',
+            })
+            
+            if (accounts && accounts.length > 0) {
+              // Tentar conectar usando wagmi
+              const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+              if (connector) {
+                await connect({ connector })
+              }
+            }
+          } catch (error) {
+            console.error('Error checking connection after focus:', error)
+          }
+        }
+      }
+
+      window.addEventListener('focus', handleFocus)
+      
+      return () => {
+        window.removeEventListener('focus', handleFocus)
+      }
+    }
+  }, [isMobile, isConnected, connectors, connect])
 
   return (
     <div className="min-h-screen relative overflow-x-hidden w-full">
