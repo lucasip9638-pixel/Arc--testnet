@@ -42,7 +42,43 @@ export function DeFiApp() {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
+  // Detectar se está em mobile
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
   const handleConnect = async () => {
+    // Se estiver em mobile
+    if (isMobile) {
+      // Verificar se tem window.ethereum (navegador com extensão ou app de carteira)
+      if (window.ethereum) {
+        // Tem provider, tentar conectar normalmente
+        const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
+        if (connector) {
+          try {
+            await connect({ connector })
+            return
+          } catch (error) {
+            console.error('Connection error:', error)
+            // Se falhar, continuar para tentar deep link
+          }
+        }
+      }
+
+      // Não tem window.ethereum ou conexão falhou, usar deep link para abrir app da carteira
+      const currentUrl = window.location.href
+      const encodedUrl = encodeURIComponent(currentUrl)
+      
+      // MetaMask deep link - formato universal que funciona em iOS e Android
+      // Isso vai abrir o app MetaMask se instalado, ou redirecionar para a loja de apps
+      const metamaskDeepLink = `https://metamask.app.link/dapp/${encodedUrl}`
+      
+      // Redirecionar para o deep link do MetaMask
+      // No mobile, isso vai abrir o app MetaMask automaticamente
+      window.location.href = metamaskDeepLink
+      
+      return
+    }
+
+    // Desktop: usar conexão normal com wagmi
     const connector = connectors.find(c => c.id === 'metaMask' || c.id === 'injected') || connectors[0]
     if (connector) {
       connect({ connector })
