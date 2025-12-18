@@ -3,39 +3,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     unoptimized: true,
   },
   reactStrictMode: true,
   // Turbopack configuration
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-        },
-      },
-      resolveAlias: {
-        // Fallback for wallet SDKs
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-      },
-      resolveExtensions: [
-        '.js',
-        '.jsx',
-        '.ts',
-        '.tsx',
-        '.json',
-        '.mjs',
-      ],
-    },
-  },
-  // Webpack fallback for non-Turbopack mode
+  turbopack: {},
+  // Webpack configuration (fallback)
   webpack: (config, { isServer }) => {
     // Fix for Webpack issues with wallet SDKs
     if (!isServer) {
