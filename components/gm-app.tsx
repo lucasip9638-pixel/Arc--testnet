@@ -76,7 +76,7 @@ export function GMApp() {
     setShowConfetti(false)
   }
 
-  // Auto-switch para Arc Testnet quando conectar
+  // Auto-switch to Arc Testnet when connecting
   useEffect(() => {
     if (isConnected && typeof window !== "undefined" && window.ethereum) {
       window.ethereum.request({ method: "eth_chainId" }).then((chainId: unknown) => {
@@ -152,7 +152,7 @@ export function GMApp() {
             >
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">Carteira Conectada</p>
+                  <p className="text-sm font-medium leading-none">Connected Wallet</p>
                   <p className="text-xs leading-none text-muted-foreground font-mono">
                     {formatAddress(address || "")}
                   </p>
@@ -168,7 +168,7 @@ export function GMApp() {
                 className="cursor-pointer"
               >
                 <Copy className="mr-2 h-4 w-4" />
-                <span>Copiar Endereço</span>
+                <span>Copy Address</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
@@ -179,7 +179,7 @@ export function GMApp() {
                 className="cursor-pointer"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
-                <span>Ver no Explorer</span>
+                <span>View on Explorer</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -187,7 +187,7 @@ export function GMApp() {
                 className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Desconectar</span>
+                <span>Disconnect</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -296,7 +296,7 @@ export function GMApp() {
       </div>
 
       <footer className="absolute bottom-8 left-0 right-0 flex justify-between items-center px-8 gap-4">
-        {/* Lado Esquerdo - Blockchain da Arc e Site */}
+        {/* Left Side - Arc Blockchain and Site */}
         <div className="flex flex-col items-center ml-8">
           <div className="flex items-center gap-4 relative">
             <p className="text-xs font-semibold text-white/70 mb-3 absolute -top-6 left-1/2 -translate-x-1/2 uppercase tracking-wider text-center w-full">ARC TESTNET</p>
@@ -313,7 +313,7 @@ export function GMApp() {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              Blockchain da Arc
+              Arc Blockchain
             </Button>
 
             <Button
@@ -334,7 +334,7 @@ export function GMApp() {
           </div>
         </div>
 
-        {/* Lado Direito - X do Usuário */}
+        {/* Right Side - User X */}
         <div className="flex flex-col items-center mr-8">
           <p className="text-xs font-semibold text-white/70 mb-3 uppercase tracking-wider text-center">SOCIAL DEV</p>
           <div className="flex items-center">

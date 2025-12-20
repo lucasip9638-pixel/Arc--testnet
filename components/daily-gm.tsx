@@ -20,10 +20,10 @@ export function DailyGM({ account }: DailyGMProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSwitchingChain, setIsSwitchingChain] = useState(false)
 
-  // Verificar rede ao montar componente
+  // Check network when mounting component
   useEffect(() => {
     if (isConnected && chainId !== arcTestnet.id) {
-      setErrorMessage("⚠️ Você está na rede errada! Troque para Arc Testnet no topo da página para pagar gas em USDC.")
+      setErrorMessage("⚠️ You are on the wrong network! Switch to Arc Testnet at the top of the page to pay gas in USDC.")
     } else {
       setErrorMessage(null)
     }
@@ -72,14 +72,9 @@ export function DailyGM({ account }: DailyGMProps) {
   // Write contract (send GM)
   const { writeContract, data: hash, isPending, error: writeError } = useWriteContract()
 
-  // Wait for transaction with faster polling
+  // Wait for transaction
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
-    pollingInterval: 1000, // Poll every 1 second for faster confirmation
-    query: {
-      enabled: !!hash,
-      retry: true,
-    },
   })
 
   // Stats from contract
@@ -155,19 +150,19 @@ export function DailyGM({ account }: DailyGMProps) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  // Função para trocar para Arc Testnet
+  // Function to switch to Arc Testnet
   const handleSwitchToArcTestnet = async () => {
     setIsSwitchingChain(true)
     setErrorMessage(null)
     
     try {
-      // Tentar fazer switch usando wagmi
+      // Try to switch using wagmi
       try {
         await switchChain({ chainId: arcTestnet.id })
-        // Aguardar rede mudar
+        // Wait for network to change
         await new Promise(resolve => setTimeout(resolve, 2000))
       } catch (switchError: any) {
-        // Se falhar, tentar adicionar a rede diretamente
+        // If it fails, try to add the network directly
         if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError") {
           if (typeof window !== "undefined" && window.ethereum) {
             await window.ethereum.request({
@@ -184,7 +179,7 @@ export function DailyGM({ account }: DailyGMProps) {
                 blockExplorerUrls: ["https://testnet.arcscan.app"],
               }],
             })
-            // Aguardar rede ser adicionada e mudar
+            // Wait for network to be added and change
             await new Promise(resolve => setTimeout(resolve, 2000))
           }
         } else {
@@ -207,114 +202,17 @@ export function DailyGM({ account }: DailyGMProps) {
       return
     }
 
+    // Check if on the correct network (Arc Testnet - Chain ID: 5042002)
+    if (chainId !== arcTestnet.id) {
+      setErrorMessage("Please switch to Arc Testnet first. Click 'Switch Network' button above.")
+      return
+    }
+
     setErrorMessage(null)
     setGmSuccess(false)
 
-    // Verificar primeiro diretamente no MetaMask qual é a rede atual
-    let currentChainIdFromWallet = chainId
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        const walletChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
-        currentChainIdFromWallet = parseInt(walletChainId, 16)
-      } catch (error) {
-        console.error("Error getting chainId from wallet:", error)
-      }
-    }
-
-    // Verificar e trocar para Arc Testnet se necessário
-    if (currentChainIdFromWallet !== arcTestnet.id) {
-      setIsSwitchingChain(true)
-      try {
-        // Tentar fazer switch
-        await switchChain({ chainId: arcTestnet.id })
-        
-        // Aguardar e verificar se a rede realmente trocou
-        let attempts = 0
-        const maxAttempts = 10
-        while (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 500))
-          if (typeof window !== "undefined" && window.ethereum) {
-            const currentChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
-            const currentChainIdNumber = parseInt(currentChainId, 16)
-            if (currentChainIdNumber === arcTestnet.id) {
-              break
-            }
-          }
-          attempts++
-        }
-        
-        // Verificar novamente o chainId do wagmi
-        if (chainId !== arcTestnet.id && attempts >= maxAttempts) {
-          setErrorMessage("Falha ao trocar para Arc Testnet. Por favor, troque manualmente no MetaMask.")
-          setIsSwitchingChain(false)
-          return
-        }
-      } catch (switchError: any) {
-        setIsSwitchingChain(false)
-        // Se a rede não existir, adicionar
-        if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError" || switchError?.message?.includes("not found")) {
-          if (typeof window !== "undefined" && window.ethereum) {
-            try {
-              await window.ethereum.request({
-                method: "wallet_addEthereumChain",
-                params: [{
-                  chainId: `0x${arcTestnet.id.toString(16)}`,
-                  chainName: "Arc Testnet",
-                  nativeCurrency: {
-                    name: "USDC",
-                    symbol: "USDC",
-                    decimals: 6,
-                  },
-                  rpcUrls: ["https://rpc.testnet.arc.network"],
-                  blockExplorerUrls: ["https://testnet.arcscan.app"],
-                }],
-              })
-              // Aguardar e verificar se a rede trocou
-              await new Promise(resolve => setTimeout(resolve, 1500))
-              let attempts = 0
-              const maxAttempts = 10
-              while (attempts < maxAttempts) {
-                if (typeof window !== "undefined" && window.ethereum) {
-                  const currentChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
-                  const currentChainIdNumber = parseInt(currentChainId, 16)
-                  if (currentChainIdNumber === arcTestnet.id) {
-                    break
-                  }
-                }
-                await new Promise(resolve => setTimeout(resolve, 500))
-                attempts++
-              }
-            } catch (addError) {
-              setErrorMessage("Falha ao adicionar Arc Testnet. Por favor, adicione manualmente no MetaMask.")
-              setIsSwitchingChain(false)
-              return
-            }
-          }
-        } else if (switchError?.code === 4001) {
-          setErrorMessage("Troca de rede cancelada pelo usuário.")
-          setIsSwitchingChain(false)
-          return
-        } else {
-          setErrorMessage("Por favor, troque para Arc Testnet para pagar gas em USDC.")
-          setIsSwitchingChain(false)
-          return
-        }
-      }
-      setIsSwitchingChain(false)
-      
-      // Verificar novamente após a troca
-      if (typeof window !== "undefined" && window.ethereum) {
-        const finalChainId = await window.ethereum.request({ method: "eth_chainId" }) as string
-        const finalChainIdNumber = parseInt(finalChainId, 16)
-        if (finalChainIdNumber !== arcTestnet.id) {
-          setErrorMessage("Falha ao trocar para Arc Testnet. Por favor, troque manualmente no MetaMask.")
-          return
-        }
-      }
-    }
-
     try {
-      // Não passar chainId - deixar wagmi usar a rede atual (que já verificamos ser Arc Testnet)
+      // Don't pass chainId explicitly - let wagmi use the current network
       writeContract({
         address: DAILY_GM_CONTRACT_ADDRESS,
         abi: DAILY_GM_ABI,
@@ -322,12 +220,10 @@ export function DailyGM({ account }: DailyGMProps) {
       })
     } catch (error: any) {
       console.error("GM failed:", error)
-      if (error?.message?.includes("chain") || error?.message?.includes("network") || error?.message?.includes("cadeia")) {
-        setErrorMessage("Rede incorreta. Por favor, troque para Arc Testnet e tente novamente.")
-      } else if (error?.message?.includes("User rejected") || error?.message?.includes("user rejected") || error?.message?.includes("rejected")) {
-        setErrorMessage("Transação cancelada pelo usuário")
+      if (error?.message?.includes("chain")) {
+        setErrorMessage("Wrong network. Please switch to Arc Testnet.")
       } else {
-        setErrorMessage(`Falha ao enviar GM: ${error?.message || "Erro desconhecido"}`)
+        setErrorMessage("Failed to send GM transaction")
       }
     }
   }
@@ -350,11 +246,11 @@ export function DailyGM({ account }: DailyGMProps) {
     setGmSuccess(false)
   }
 
-  const isSending = isPending || isConfirming || isSwitchingChain
+  const isSending = isPending || isConfirming
 
   return (
-    <Card className="p-4 sm:p-6 bg-[#0f1729]/40 backdrop-blur-xl border-white/5 shadow-xl">
-      <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6">Daily GM</h2>
+    <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
+      <h2 className="text-2xl font-bold text-foreground mb-6">Daily GM</h2>
 
       {/* Contract not deployed warning */}
       {DAILY_GM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" && (
@@ -380,29 +276,29 @@ export function DailyGM({ account }: DailyGMProps) {
       )}
 
       {/* GM Stats Grid */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
-        <div className="bg-background/30 rounded-lg p-2 sm:p-3 text-center">
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-background/30 rounded-lg p-3 text-center">
           <p className="text-xs text-muted-foreground mb-1">Total GMs</p>
-          <p className="text-lg sm:text-xl font-bold text-foreground">{stats.totalGMs}</p>
+          <p className="text-xl font-bold text-foreground">{stats.totalGMs}</p>
         </div>
-        <div className="bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg p-2 sm:p-3 text-center border border-accent/30">
+        <div className="bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg p-3 text-center border border-accent/30">
           <div className="flex items-center justify-center gap-1 mb-1">
             <Flame className="h-3 w-3 text-accent" />
             <p className="text-xs text-muted-foreground">Streak</p>
           </div>
-          <p className="text-lg sm:text-xl font-bold text-accent">{stats.currentStreak}</p>
+          <p className="text-xl font-bold text-accent">{stats.currentStreak}</p>
         </div>
-        <div className="bg-background/30 rounded-lg p-2 sm:p-3 text-center">
+        <div className="bg-background/30 rounded-lg p-3 text-center">
           <p className="text-xs text-muted-foreground mb-1">Longest</p>
-          <p className="text-lg sm:text-xl font-bold text-foreground">{stats.longestStreak}</p>
+          <p className="text-xl font-bold text-foreground">{stats.longestStreak}</p>
         </div>
       </div>
 
       {/* GM Button / Countdown */}
       {!canSayGM && !gmSuccess && timeUntilNext > 0 && (
-        <div className="bg-background/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center">
-          <p className="text-xs sm:text-sm text-muted-foreground mb-2">Next GM available in</p>
-          <p className="text-xl sm:text-2xl font-mono font-bold text-accent">{formatTime(timeUntilNext)}</p>
+        <div className="bg-background/30 rounded-lg p-4 mb-6 text-center">
+          <p className="text-sm text-muted-foreground mb-2">Next GM available in</p>
+          <p className="text-2xl font-mono font-bold text-accent">{formatTime(timeUntilNext)}</p>
         </div>
       )}
 
@@ -415,8 +311,8 @@ export function DailyGM({ account }: DailyGMProps) {
           />
 
           {/* Centered floating modal */}
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md px-3 sm:px-4 animate-in zoom-in-95 fade-in duration-300">
-            <div className="bg-gradient-to-br from-card to-card/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border-2 border-accent/40 shadow-2xl backdrop-blur-xl relative max-h-[90vh] overflow-y-auto">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md px-4 animate-in zoom-in-95 fade-in duration-300">
+            <div className="bg-gradient-to-br from-card to-card/80 rounded-2xl p-8 border-2 border-accent/40 shadow-2xl backdrop-blur-xl relative">
               {/* Close button */}
               <button
                 onClick={handleCloseModal}
@@ -426,10 +322,10 @@ export function DailyGM({ account }: DailyGMProps) {
               </button>
 
               {/* Success message */}
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="text-4xl sm:text-6xl mb-3 sm:mb-4 animate-bounce">🌅</div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">GM Sent!</h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 px-2">Your on-chain good morning is now live on Arc Testnet</p>
+              <div className="text-center mb-8">
+                <div className="text-6xl mb-4 animate-bounce">🌅</div>
+                <h3 className="text-3xl font-bold text-foreground mb-2">GM Sent!</h3>
+                <p className="text-muted-foreground mb-4">Your on-chain good morning is now live on Arc Testnet</p>
                 {hash && (
                   <p className="text-xs text-muted-foreground font-mono break-all">
                     {hash}
@@ -438,13 +334,13 @@ export function DailyGM({ account }: DailyGMProps) {
               </div>
 
               {/* Action buttons */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-3">
                 <Button
                   onClick={handleShareOnX}
-                  className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 gap-2 sm:gap-3"
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-accent to-primary hover:from-accent/90 hover:to-primary/90 gap-3"
                   size="lg"
                 >
-                  <Share2 className="h-5 w-5 sm:h-6 sm:w-6" />
+                  <Share2 className="h-6 w-6" />
                   Share on X
                 </Button>
                 <Button
@@ -490,7 +386,7 @@ export function DailyGM({ account }: DailyGMProps) {
       <Button
         onClick={handleSayGM}
         disabled={!isConnected || !canSayGM || isSending || isSwitchingChain || DAILY_GM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000" || (isConnected && chainId !== arcTestnet.id)}
-        className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold"
+        className="w-full h-14 text-lg font-bold"
         size="lg"
       >
         {!isConnected

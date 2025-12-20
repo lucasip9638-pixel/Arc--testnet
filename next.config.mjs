@@ -8,8 +8,31 @@ const nextConfig = {
   },
   reactStrictMode: true,
   // Turbopack configuration
-  turbopack: {},
-  // Webpack configuration (fallback)
+  experimental: {
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+        },
+      },
+      resolveAlias: {
+        // Fallback for wallet SDKs
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      },
+      resolveExtensions: [
+        '.js',
+        '.jsx',
+        '.ts',
+        '.tsx',
+        '.json',
+        '.mjs',
+      ],
+    },
+  },
+  // Webpack fallback for non-Turbopack mode
   webpack: (config, { isServer }) => {
     // Fix for Webpack issues with wallet SDKs
     if (!isServer) {

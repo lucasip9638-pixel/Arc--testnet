@@ -8,7 +8,6 @@
     "dev:webpack": "next dev",
     "dev:open": "next dev --turbo --open",
     "dev:host": "next dev --turbo -H localhost",
-    "dev:safe": "next dev",
     "lint": "eslint .",
     "start": "next start",
     "compile": "hardhat compile",

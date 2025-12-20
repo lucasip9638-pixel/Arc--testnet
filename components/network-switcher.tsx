@@ -30,11 +30,11 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
 
     setIsAddingNetwork(true)
     try {
-      // Tentar fazer switch primeiro
+      // Try to switch first
       try {
         await switchChain({ chainId: arcTestnet.id })
       } catch (switchError: any) {
-        // Se a rede não existir, adicionar
+        // If network doesn't exist, add it
         if (switchError?.code === 4902 || switchError?.name === "ChainNotFoundError" || switchError?.message?.includes("not found")) {
           if (typeof window !== "undefined" && window.ethereum) {
             try {
@@ -52,19 +52,19 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
                   blockExplorerUrls: ["https://testnet.arcscan.app"],
                 }],
               })
-              // Aguardar e tentar switch novamente
+              // Wait and try to switch again
               await new Promise(resolve => setTimeout(resolve, 1500))
               await switchChain({ chainId: arcTestnet.id })
             } catch (addError: any) {
               console.error("Error adding network:", addError)
               if (addError?.code !== 4001) {
-                // Não mostrar erro se usuário cancelou
-                alert("❌ Erro ao adicionar Arc Testnet. Por favor, adicione manualmente na carteira:\n\nRede: Arc Testnet\nRPC: https://rpc.testnet.arc.network\nChain ID: 5042002\nMoeda: USDC (6 decimais)")
+                // Don't show error if user cancelled
+                alert("❌ Error adding Arc Testnet. Please add manually in your wallet:\n\nNetwork: Arc Testnet\nRPC: https://rpc.testnet.arc.network\nChain ID: 5042002\nCurrency: USDC (6 decimals)")
               }
             }
           }
         } else if (switchError?.code !== 4001) {
-          // Não mostrar erro se usuário cancelou
+          // Don't show error if user cancelled
           console.error("Error switching network:", switchError)
         }
       }
@@ -76,7 +76,7 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
   }
 
   const handleClick = () => {
-    // Sempre mostrar a notificação quando clicar, mesmo se já estiver na rede
+    // Always show notification when clicking, even if already on the network
     setShowInfo(true)
   }
 
@@ -101,7 +101,7 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="hidden md:inline text-sm font-medium">
-              {isAddingNetwork ? "Adicionando..." : "Trocando..."}
+              {isAddingNetwork ? "Adding..." : "Switching..."}
             </span>
           </>
         ) : isArcTestnet ? (
@@ -112,7 +112,7 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
         ) : (
           <>
             <Plus className="h-4 w-4" />
-            <span className="hidden md:inline text-sm font-medium">Adicionar Arc Testnet</span>
+            <span className="hidden md:inline text-sm font-medium">Add Arc Testnet</span>
           </>
         )}
       </Button>
@@ -123,12 +123,12 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <Info className="h-5 w-5 text-[#06b6d4]" />
-              {isArcTestnet ? "Arc Testnet - Rede Oficial" : "Adicionar Arc Testnet"}
+              {isArcTestnet ? "Arc Testnet - Official Network" : "Add Arc Testnet"}
             </DialogTitle>
             <DialogDescription className="text-white/70">
               {isArcTestnet 
-                ? "Você está conectado à rede oficial da Arc" 
-                : "Requisitos importantes antes de adicionar a rede"}
+                ? "You are connected to Arc's official network" 
+                : "Important requirements before adding the network"}
             </DialogDescription>
           </DialogHeader>
           
@@ -138,9 +138,9 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
                   <div className="space-y-2">
-                    <p className="text-sm font-semibold text-green-300">✓ Conectado à Rede Oficial</p>
+                    <p className="text-sm font-semibold text-green-300">✓ Connected to Official Network</p>
                     <p className="text-sm text-green-200/80">
-                      Você está conectado à <strong>Arc Testnet</strong>, a rede oficial da Arc Network.
+                      You are connected to <strong>Arc Testnet</strong>, the official network of Arc Network.
                     </p>
                   </div>
                 </div>
@@ -151,19 +151,19 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold text-yellow-300">⚠️ Informação Importante:</p>
+                  <p className="text-sm font-semibold text-yellow-300">⚠️ Important Information:</p>
                   <ul className="text-sm text-yellow-200/80 space-y-2 list-disc list-inside">
-                    <li>Esta é a <strong>rede oficial da Arc Network</strong></li>
-                    <li>É <strong>necessário ter tokens USDC</strong> na rede Arc Testnet para pagar as taxas de gas</li>
-                    <li>O gas é pago em <strong>USDC</strong>, não em ETH</li>
-                    <li>Obtenha USDC de teste através do{" "}
+                    <li>This is the <strong>official network of Arc Network</strong></li>
+                    <li>You <strong>need to have USDC tokens</strong> on Arc Testnet to pay gas fees</li>
+                    <li>Gas is paid in <strong>USDC</strong>, not ETH</li>
+                    <li>Get test USDC from the{" "}
                       <a 
                         href="https://faucet.circle.com/" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-[#06b6d4] hover:text-[#06b6d4]/80 underline font-semibold"
                       >
-                        faucet oficial da Circle
+                        official Circle faucet
                       </a>
                     </li>
                   </ul>
@@ -172,12 +172,12 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
             </div>
 
             <div className="bg-[#1e3a5f]/30 border border-[#3b82f6]/20 rounded-lg p-4">
-              <p className="text-sm font-semibold text-white mb-2">Detalhes da Rede:</p>
+              <p className="text-sm font-semibold text-white mb-2">Network Details:</p>
               <div className="space-y-1 text-xs text-white/70 font-mono">
                 <p>• Chain ID: 5042002</p>
                 <p>• RPC: https://rpc.testnet.arc.network</p>
                 <p>• Explorer: https://testnet.arcscan.app</p>
-                <p>• Moeda Nativa: USDC (6 decimais)</p>
+                <p>• Native Currency: USDC (6 decimals)</p>
               </div>
             </div>
           </div>
@@ -188,7 +188,7 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
               onClick={() => setShowInfo(false)}
               className="text-white/70 hover:text-white"
             >
-              Fechar
+              Close
             </Button>
             {!isArcTestnet && (
               <Button
@@ -199,12 +199,12 @@ export function NetworkSwitcher({ className }: NetworkSwitcherProps) {
                 {isSwitchingChain || isAddingNetwork ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adicionando...
+                    Adding...
                   </>
                 ) : (
                   <>
                     <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Rede
+                    Add Network
                   </>
                 )}
               </Button>
