@@ -9,6 +9,7 @@ import { useAccount, useChainId, useSwitchChain } from "wagmi"
 import { arcTestnet } from "@/lib/wagmi-config"
 import { TokenSwapReal } from "./token-swap-real"
 import { DailyGM } from "./daily-gm"
+import { SendToken } from "./send-token"
 import { NetworkSelector } from "./network-selector"
 
 export function DeFiApp() {
@@ -206,12 +207,15 @@ export function DeFiApp() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/5 backdrop-blur-sm border border-white/10">
+            <TabsList className="grid w-full grid-cols-3 mb-8 bg-white/5 backdrop-blur-sm border border-white/10">
               <TabsTrigger value="gm" className="data-[state=active]:bg-white/10">
                 Daily GM
               </TabsTrigger>
               <TabsTrigger value="swap" className="data-[state=active]:bg-white/10">
                 Swap
+              </TabsTrigger>
+              <TabsTrigger value="send" className="data-[state=active]:bg-white/10">
+                Send Tokens
               </TabsTrigger>
             </TabsList>
 
@@ -221,6 +225,10 @@ export function DeFiApp() {
 
             <TabsContent value="swap" className="space-y-6">
               <TokenSwapReal account={isConnected ? address : null} />
+            </TabsContent>
+
+            <TabsContent value="send" className="space-y-6">
+              <SendToken account={isConnected ? address : null} />
             </TabsContent>
           </Tabs>
 
