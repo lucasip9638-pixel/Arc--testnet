@@ -29,6 +29,10 @@ The project includes three Solidity smart contracts:
 2. **Staking.sol** - Token staking with APY rewards
 3. **DailyGM.sol** - Daily GM tracking with streak system
 
+## 🌐 Live Demo
+
+**Deployed on Vercel:** [https://arc-testnet-sdsz.vercel.app/](https://arc-testnet-sdsz.vercel.app/)
+
 ## Getting Started
 
 ### Prerequisites
@@ -49,8 +53,21 @@ The project includes three Solidity smart contracts:
 ### Installation
 
 1. Clone the repository
-2. Install dependencies: `npm install`
-3. Run development server: `npm run dev`
+   ```bash
+   git clone https://github.com/lucasip9638-pixel/Arc--testnet.git
+   cd Arc--testnet
+   ```
+
+2. Install dependencies
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+3. Run development server
+   ```bash
+   npm run dev
+   ```
+
 4. Open [http://localhost:3000](http://localhost:3000)
 
 ### Deploying Contracts
