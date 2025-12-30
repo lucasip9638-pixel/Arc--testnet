@@ -295,7 +295,7 @@ export function GMApp() {
         </div>
       </div>
 
-      <footer className="absolute bottom-8 left-0 right-0 flex justify-between items-center px-8 gap-4 border-t border-white/10 pt-6">
+      <footer className="absolute bottom-8 left-0 right-0 flex justify-between items-center px-[3cm] gap-4 border-t border-white/10 pt-6">
         {/* Left Side - Arc Network Links */}
         <div className="flex flex-col gap-3">
           <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Arc Network</p>

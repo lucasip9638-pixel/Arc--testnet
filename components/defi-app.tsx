@@ -251,8 +251,8 @@ export function DeFiApp() {
       </div>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 mt-12 border-t border-white/10">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="w-full py-8 mt-12 border-t border-white/10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-[3cm]">
           {/* Left Side - Arc Network Links */}
           <div className="flex flex-col gap-3">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Arc Network</p>
