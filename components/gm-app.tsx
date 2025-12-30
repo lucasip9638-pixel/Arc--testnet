@@ -297,8 +297,8 @@ export function GMApp() {
 
       <footer className="absolute bottom-8 left-0 right-0 flex justify-between items-center px-[3cm] gap-4 border-t border-white/10 pt-6">
         {/* Left Side - Arc Network Links */}
-        <div className="flex flex-col gap-3">
-          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Arc Network</p>
+        <div className="flex flex-col gap-3 items-center">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1 text-center">Arc Network</p>
           <div className="flex items-center gap-3">
             <Button
               onClick={() => window.open("https://www.arc.network/", "_blank")}
@@ -349,8 +349,8 @@ export function GMApp() {
         </div>
 
         {/* Right Side - Developer Links */}
-        <div className="flex flex-col gap-3">
-          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Developer</p>
+        <div className="flex flex-col gap-3 items-center">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1 text-center">Developer</p>
           <div className="flex items-center gap-3">
             <Button
               onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}

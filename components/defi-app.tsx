@@ -254,8 +254,8 @@ export function DeFiApp() {
       <footer className="w-full py-8 mt-12 border-t border-white/10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-[3cm]">
           {/* Left Side - Arc Network Links */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Arc Network</p>
+          <div className="flex flex-col gap-3 items-center">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1 text-center">Arc Network</p>
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => window.open("https://www.arc.network/", "_blank")}
@@ -306,8 +306,8 @@ export function DeFiApp() {
           </div>
 
           {/* Right Side - Developer Links */}
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Developer</p>
+          <div className="flex flex-col gap-3 items-center">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1 text-center">Developer</p>
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}
