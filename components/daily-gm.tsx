@@ -195,16 +195,37 @@ export function DailyGM({ account }: DailyGMProps) {
   }
 
   const handleSayGM = async () => {
-    if (!isConnected || !address || !canSayGM) return
+    if (!isConnected || !address) {
+      setErrorMessage("Please connect your wallet first.")
+      return
+    }
 
     if (DAILY_GM_CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
       setErrorMessage("DailyGM contract not deployed. Please deploy the contract first.")
       return
     }
 
-    // Check if on the correct network (Arc Testnet - Chain ID: 5042002)
+    // FORCE check if on the correct network (Arc Testnet - Chain ID: 5042002)
     if (chainId !== arcTestnet.id) {
-      setErrorMessage("Please switch to Arc Testnet first. Click 'Switch Network' button above.")
+      setErrorMessage("⚠️ You must be on Arc Testnet to send GM! Gas fees will be paid in USDC, not ETH. Click 'Switch to Arc Testnet' button above.")
+      // Try to switch automatically
+      try {
+        await handleSwitchToArcTestnet()
+        // Wait a bit and check again
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        if (typeof window !== "undefined" && window.ethereum) {
+          const newChainId = await window.ethereum.request({ method: "eth_chainId" })
+          if (newChainId && parseInt(newChainId as string, 16) !== arcTestnet.id) {
+            return // Still wrong network, user needs to switch manually
+          }
+        }
+      } catch (error) {
+        return // Failed to switch
+      }
+    }
+
+    if (!canSayGM) {
+      setErrorMessage("You already sent GM today. Wait for the countdown to finish.")
       return
     }
 
@@ -212,18 +233,23 @@ export function DailyGM({ account }: DailyGMProps) {
     setGmSuccess(false)
 
     try {
-      // Don't pass chainId explicitly - let wagmi use the current network
+      // Write contract - this will trigger MetaMask to show USDC gas fee
       writeContract({
         address: DAILY_GM_CONTRACT_ADDRESS,
         abi: DAILY_GM_ABI,
         functionName: "sayGM",
+        chainId: arcTestnet.id, // Explicitly set chain ID to ensure Arc Testnet
       })
     } catch (error: any) {
       console.error("GM failed:", error)
-      if (error?.message?.includes("chain")) {
-        setErrorMessage("Wrong network. Please switch to Arc Testnet.")
+      if (error?.message?.includes("chain") || error?.message?.includes("network")) {
+        setErrorMessage("Wrong network. Please switch to Arc Testnet (Chain ID: 5042002) to pay gas in USDC.")
+      } else if (error?.message?.includes("rejected") || error?.message?.includes("User rejected")) {
+        setErrorMessage("Transaction rejected. Please approve the transaction to pay gas fees in USDC.")
+      } else if (error?.message?.includes("insufficient") || error?.message?.includes("balance")) {
+        setErrorMessage("Insufficient USDC balance. You need USDC to pay gas fees on Arc Testnet.")
       } else {
-        setErrorMessage("Failed to send GM transaction")
+        setErrorMessage(`Failed to send GM: ${error?.message || "Unknown error"}`)
       }
     }
   }
@@ -360,13 +386,16 @@ export function DailyGM({ account }: DailyGMProps) {
 
       {/* Network Warning */}
       {isConnected && chainId !== arcTestnet.id && (
-        <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+        <div className="mb-4 p-4 bg-yellow-500/10 border-2 border-yellow-500/50 rounded-lg">
           <div className="flex items-center gap-2 text-yellow-500">
             <AlertCircle className="h-5 w-5" />
             <div className="flex-1">
-              <p className="text-sm font-medium">Wrong Network</p>
-              <p className="text-xs text-yellow-500/80">
-                Please switch to Arc Testnet (Chain ID: 5042002) to send GM. Gas fees will be paid in USDC, not ETH.
+              <p className="text-sm font-bold">⚠️ WRONG NETWORK - Switch Required</p>
+              <p className="text-xs text-yellow-500/90 mt-1">
+                You are currently on Chain ID: {chainId}. You MUST switch to Arc Testnet (Chain ID: 5042002) to send GM.
+              </p>
+              <p className="text-xs text-yellow-500/90 mt-1 font-semibold">
+                💰 Gas fees on Arc Testnet are paid in USDC, not ETH!
               </p>
             </div>
             <Button
@@ -374,7 +403,7 @@ export function DailyGM({ account }: DailyGMProps) {
               disabled={isSwitchingChain}
               size="sm"
               variant="outline"
-              className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/20"
+              className="border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/20 font-semibold whitespace-nowrap"
             >
               {isSwitchingChain ? "Switching..." : "Switch to Arc Testnet"}
             </Button>
@@ -405,9 +434,18 @@ export function DailyGM({ account }: DailyGMProps) {
       </Button>
 
       {/* Info Text */}
-      <p className="text-xs text-muted-foreground text-center mt-4">
-        Send a daily GM on-chain to maintain your streak and earn rewards!
-      </p>
+      <div className="mt-4 space-y-2">
+        <p className="text-xs text-muted-foreground text-center">
+          Send a daily GM on-chain to maintain your streak and earn rewards!
+        </p>
+        {isConnected && chainId === arcTestnet.id && (
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
+            <p className="text-xs text-green-400 font-semibold">
+              ✅ Connected to Arc Testnet - Gas fees will be paid in USDC
+            </p>
+          </div>
+        )}
+      </div>
     </Card>
   )
 }
