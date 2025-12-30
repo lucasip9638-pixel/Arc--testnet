@@ -3,7 +3,7 @@
 ## ✅ Status Atual
 
 - **Site Deployado**: https://arc-testnet-sdsz.vercel.app/
-- **Repositório GitHub**: https://github.com/lucasip9638-pixel/Arc--testnet
+- **Repositório GitHub**: https://github.com/lucasip9638-pixel/ARC-DeFi-Hub
 - **Deploy Automático**: Configurado ✅
 
 ## 🔗 Como Funciona
@@ -20,7 +20,7 @@ O Vercel está conectado ao seu repositório GitHub e faz deploy automático sem
 
 ### 3. Adicione Novo Projeto
 - Clique em **"Add New Project"**
-- Selecione o repositório: `lucasip9638-pixel/Arc--testnet`
+- Selecione o repositório: `lucasip9638-pixel/ARC-DeFi-Hub`
 - Clique em **"Import"**
 
 ### 4. Configure o Projeto
@@ -81,5 +81,5 @@ O Vercel automaticamente:
 
 - **Dashboard Vercel**: https://vercel.com/dashboard
 - **Site Deployado**: https://arc-testnet-sdsz.vercel.app/
-- **Repositório**: https://github.com/lucasip9638-pixel/Arc--testnet
+- **Repositório**: https://github.com/lucasip9638-pixel/ARC-DeFi-Hub
 
