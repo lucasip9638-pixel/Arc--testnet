@@ -251,63 +251,69 @@ export function DeFiApp() {
       </div>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 mt-12">
-        <div className="flex flex-col gap-6">
-          {/* Arc Network Links */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-white/50">
-            <Button
-              onClick={() => window.open("https://www.arc.network/", "_blank")}
-              variant="ghost"
-              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                />
-              </svg>
-              Arc Network
-            </Button>
+      <footer className="container mx-auto px-4 py-8 mt-12 border-t border-white/10">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Left Side - Arc Network Links */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Arc Network</p>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => window.open("https://www.arc.network/", "_blank")}
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
+                title="Arc Network Website"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                  />
+                </svg>
+              </Button>
 
-            <Button
-              onClick={() => window.open("https://x.com/arc", "_blank")}
-              variant="ghost"
-              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-              Follow on X
-            </Button>
+              <Button
+                onClick={() => window.open("https://x.com/arc", "_blank")}
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
+                title="Follow Arc Network on X"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </Button>
 
-            <Button
-              onClick={() => window.open("https://testnet.arcscan.app", "_blank")}
-              variant="ghost"
-              className="flex items-center gap-2 text-white/60 hover:text-white hover:bg-white/10 transition-all"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              Block Explorer
-            </Button>
+              <Button
+                onClick={() => window.open("https://testnet.arcscan.app", "_blank")}
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
+                title="Arc Testnet Block Explorer"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </Button>
+            </div>
           </div>
 
-          {/* Developer Links */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-xs text-white/40 mb-2">Developed by</p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Right Side - Developer Links */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Developer</p>
+            <div className="flex items-center gap-3">
               <Button
                 onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
                 title="Follow developer on X"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -319,7 +325,7 @@ export function DeFiApp() {
                 onClick={() => window.open("https://github.com/lucasip9638-pixel", "_blank")}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
                 title="View developer on GitHub"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -331,7 +337,7 @@ export function DeFiApp() {
                 onClick={() => window.open("http://discordapp.com/users/1304074522067996854", "_blank")}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                className="h-9 w-9 text-white/60 hover:text-white hover:bg-white/10 transition-all rounded-full"
                 title="Contact developer on Discord"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
