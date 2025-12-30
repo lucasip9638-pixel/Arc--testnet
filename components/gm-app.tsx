@@ -342,7 +342,7 @@ export function GMApp() {
               onClick={() => window.open("https://x.com/lucas9879171721", "_blank")}
               variant="ghost"
               size="icon"
-              className="flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
               title="Follow developer on X"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -353,7 +353,7 @@ export function GMApp() {
               onClick={() => window.open("https://github.com/lucasip9638-pixel", "_blank")}
               variant="ghost"
               size="icon"
-              className="flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
               title="View developer on GitHub"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -364,7 +364,7 @@ export function GMApp() {
               onClick={() => window.open("http://discordapp.com/users/1304074522067996854", "_blank")}
               variant="ghost"
               size="icon"
-              className="flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10 transition-all"
               title="Contact developer on Discord"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
