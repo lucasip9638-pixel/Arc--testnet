@@ -59,3 +59,54 @@ Thumbs.db
 # pnpm-lock.yaml
 # yarn.lock
 
+# Scripts auxiliares e temporários
+*.bat
+*.ps1
+*.txt
+*.html
+*.zip
+
+# Documentação temporária (manter apenas README.md principal)
+*-COMPLETO.md
+*-AGORA.md
+*-FINAL.md
+*-LOCALHOST.md
+*-DEPLOY.md
+*-TUDO.md
+*-CORRIGIR.md
+*-RESOLVER.md
+*-INICIAR.md
+*-ABRIR.md
+*-FORCAR.md
+*-FAZER.md
+*-EXECUTAR.md
+*-INSTALAR.md
+*-VERIFICAR.md
+*-TESTAR.md
+*-ATUALIZAR.md
+*-CONFIGURAR.md
+*-ENVIAR.md
+*-GERAR.md
+*-REINTEGRAR.md
+*-CONEXAO.md
+*-IMPLEMENTACAO.md
+*-ANALISE.md
+*-MOSTRAR.md
+*-RESUMO.md
+*-SOLUCAO.md
+*-TOKENS.md
+*-VERIFICACAO.md
+*-COMANDOS.md
+*-COMO-*.md
+*-INSTRUCOES.md
+*-CORRECOES.md
+CORRECOES-*.md
+VERIFICACAO-*.txt
+SOLUCAO-*.txt
+COMANDOS-*.txt
+COMO-*.txt
+EXECUTAR-*.txt
+INSTRUCOES-*.txt
+LEIA-*.txt
+RESUMO-*.txt
+
