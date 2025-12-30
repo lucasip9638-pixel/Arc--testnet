@@ -33,6 +33,8 @@ The project includes three Solidity smart contracts:
 
 **Deployed on Vercel:** [https://arc-testnet-sdsz.vercel.app/](https://arc-testnet-sdsz.vercel.app/)
 
+The site automatically updates when you push changes to the `main` branch on GitHub.
+
 ## Getting Started
 
 ### Prerequisites
