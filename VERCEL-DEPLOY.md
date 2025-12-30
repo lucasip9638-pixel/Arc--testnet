@@ -60,7 +60,7 @@ O Vercel automaticamente:
 ## 📝 Verificar Deploy
 
 1. Acesse: https://vercel.com/dashboard
-2. Clique no projeto `Arc--testnet`
+2. Clique no projeto `ARC-DeFi-Hub`
 3. Veja o histórico de deploys
 4. Cada commit terá um deploy automático
 

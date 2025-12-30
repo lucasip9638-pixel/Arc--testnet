@@ -56,8 +56,8 @@ The site automatically updates when you push changes to the `main` branch on Git
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/lucasip9638-pixel/Arc--testnet.git
-   cd Arc--testnet
+   git clone https://github.com/lucasip9638-pixel/ARC-DeFi-Hub.git
+   cd ARC-DeFi-Hub
    ```
 
 2. Install dependencies
